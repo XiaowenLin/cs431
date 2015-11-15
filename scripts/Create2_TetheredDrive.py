@@ -134,6 +134,7 @@ class TetheredDriveApp():
     def sendKey(self, k):
 
         motionChange = False
+        stop = False
 
         if (k == 'STOP'):  # Stop
             cmd = struct.pack(">Bhh", 145, 0, 0)
@@ -167,7 +168,7 @@ class TetheredDriveApp():
             motionChange = True
         else:
             print repr(k), "not handled"
-            
+
         if motionChange == True:
 
             velocity = 0
