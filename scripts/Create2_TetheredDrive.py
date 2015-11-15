@@ -134,9 +134,10 @@ class TetheredDriveApp():
     def sendKey(self, k):
 
         motionChange = False
+        stop = False
 
         if (k == 'STOP'):  # Stop / Brake
-            self.motionChange = False
+            stop = True
             print 'Stopping'
         elif k == 'PASSIVE':   # Passive
             self.sendCommandASCII('128')
@@ -166,7 +167,12 @@ class TetheredDriveApp():
             motionChange = True
         else:
             print repr(k), "not handled"
-            
+        
+        if stop == True:
+            cmd = struct.pack(">Bhh", 145, 0, 0)
+            self.sendCommandRaw(cmd)
+            self.lastDriveCommand = cmd
+
         if motionChange == True:
 
             velocity = 0
