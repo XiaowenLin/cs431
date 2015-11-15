@@ -36,74 +36,43 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ###########################################################################
 
-from Tkinter import *
-import tkMessageBox
-import tkSimpleDialog
-
 import struct
 import sys, glob # for listing serial ports
 
 try:
     import serial
 except ImportError:
-    tkMessageBox.showerror('Import error', 'Please install pyserial.')
     raise
 
 connection = None
-
-TEXTWIDTH = 40 # window width, in characters
-TEXTHEIGHT = 16 # window height, in lines
 
 VELOCITYCHANGE = 200
 ROTATIONCHANGE = 300
 
 helpText = """\
-Supported Keys:
-P\tPassive
-S\tSafe
-F\tFull
-C\tClean
-D\tDock
-R\tReset
-Space\tBeep
-Arrows\tMotion
 
-If nothing happens after you connect, try pressing 'P' and then 'S' to get into safe mode.
+Supported Commands:
+
+PASSIVE
+SAFE
+FULL
+CLEAN
+DOCK
+RESET
+UP
+DOWN
+RIGHT
+LEFT
 """
 
-class TetheredDriveApp(Tk):
-    # static variables for keyboard callback -- I know, this is icky
-    callbackKeyUp = False
-    callbackKeyDown = False
-    callbackKeyLeft = False
-    callbackKeyRight = False
-    callbackKeyLastDriveCommand = ''
+class TetheredDriveApp():
 
     def __init__(self):
-        Tk.__init__(self)
-        self.title("iRobot Create 2 Tethered Drive")
-        self.option_add('*tearOff', FALSE)
-
-        self.menubar = Menu()
-        self.configure(menu=self.menubar)
-
-        createMenu = Menu(self.menubar, tearoff=False)
-        self.menubar.add_cascade(label="Create", menu=createMenu)
-
-        createMenu.add_command(label="Connect", command=self.onConnect)
-        createMenu.add_command(label="Help", command=self.onHelp)
-        createMenu.add_command(label="Quit", command=self.onQuit)
-
-        self.text = Text(self, height = TEXTHEIGHT, width = TEXTWIDTH, wrap = WORD)
-        self.scroll = Scrollbar(self, command=self.text.yview)
-        self.text.configure(yscrollcommand=self.scroll.set)
-        self.text.pack(side=LEFT, fill=BOTH, expand=True)
-        self.scroll.pack(side=RIGHT, fill=Y)
-
-        self.text.insert(END, helpText)
-
-        self.bind("<Key>", self.callbackKey)
-        self.bind("<KeyRelease>", self.callbackKey)
+        self.callbackKeyDown = False
+        self.callbackKeyUp = False
+        self.callbackKeyLeft = False
+        self.callbackKeyRight = False
+        self.lastDriveCommand = ''
 
     # sendCommandASCII takes a string of whitespace-separated, ASCII-encoded base 10 values to send
     def sendCommandASCII(self, command):
@@ -121,17 +90,14 @@ class TetheredDriveApp(Tk):
             if connection is not None:
                 connection.write(command)
             else:
-                tkMessageBox.showerror('Not connected!', 'Not connected to a robot!')
                 print "Not connected."
         except serial.SerialException:
             print "Lost connection"
-            tkMessageBox.showinfo('Uh-oh', "Lost connection to the robot!")
             connection = None
 
         print ' '.join([ str(ord(c)) for c in command ])
-        self.text.insert(END, ' '.join([ str(ord(c)) for c in command ]))
-        self.text.insert(END, '\n')
-        self.text.see(END)
+        print ' '.join([ str(ord(c)) for c in command ])
+        print '\n'
 
     # getDecodedBytes returns a n-byte value decoded using a format string.
     # Whether it blocks is based on how the connection was set up.
@@ -141,8 +107,7 @@ class TetheredDriveApp(Tk):
         try:
             return struct.unpack(fmt, connection.read(n))[0]
         except serial.SerialException:
-            print "Lost connection"
-            tkMessageBox.showinfo('Uh-oh', "Lost connection to the robot!")
+            print 'Uh-oh', "Lost connection to the robot!"
             connection = None
             return None
         except struct.error:
@@ -166,57 +131,57 @@ class TetheredDriveApp(Tk):
         return getDecodedBytes(2, ">h")
 
     # A handler for keyboard events. Feel free to add more!
-    def callbackKey(self, event):
-        k = event.keysym.upper()
+    def sendKey(self, k):
+
         motionChange = False
 
-        if event.type == '2': # KeyPress; need to figure out how to get constant
-            if k == 'P':   # Passive
-                self.sendCommandASCII('128')
-            elif k == 'S': # Safe
-                self.sendCommandASCII('131')
-            elif k == 'F': # Full
-                self.sendCommandASCII('132')
-            elif k == 'C': # Clean
-                self.sendCommandASCII('135')
-            elif k == 'D': # Dock
-                self.sendCommandASCII('143')
-            elif k == 'SPACE': # Beep
-                self.sendCommandASCII('140 3 1 64 16 141 3')
-            elif k == 'R': # Reset
-                self.sendCommandASCII('7')
-            elif k == 'UP':
-                self.callbackKeyUp = True
-                motionChange = True
-            elif k == 'DOWN':
-                self.callbackKeyDown = True
-                motionChange = True
-            elif k == 'LEFT':
-                self.callbackKeyLeft = True
-                motionChange = True
-            elif k == 'RIGHT':
-                self.callbackKeyRight = True
-                motionChange = True
-            else:
-                print repr(k), "not handled"
-        elif event.type == '3': # KeyRelease; need to figure out how to get constant
-            if k == 'UP':
-                self.callbackKeyUp = False
-                motionChange = True
-            elif k == 'DOWN':
-                self.callbackKeyDown = False
-                motionChange = True
-            elif k == 'LEFT':
-                self.callbackKeyLeft = False
-                motionChange = True
-            elif k == 'RIGHT':
-                self.callbackKeyRight = False
-                motionChange = True
+        if (k == 'STOP'):  # Stop / Brake
+            self.motionChange = False
+            print 'Stopping'
+        elif k == 'PASSIVE':   # Passive
+            self.sendCommandASCII('128')
+        elif k == 'SAFE': # Safe
+            self.sendCommandASCII('131')
+        elif k == 'FULL': # Full
+            self.sendCommandASCII('132')
+        elif k == 'CLEAN': # Clean
+            self.sendCommandASCII('135')
+        elif k == 'DOCK': # Dock
+            self.sendCommandASCII('143')
+        elif k == 'SPACE': # Beep
+            self.sendCommandASCII('140 3 1 64 16 141 3')
+        elif k == 'RESET': # Reset
+            self.sendCommandASCII('7')
+        elif k == 'UP':
+            self.callbackKeyUp = True
+            motionChange = True
+        elif k == 'DOWN':
+            self.callbackKeyDown = True
+            motionChange = True
+        elif k == 'LEFT':
+            self.callbackKeyLeft = True
+            motionChange = True
+        elif k == 'RIGHT':
+            self.callbackKeyRight = True
+            motionChange = True
+        else:
+            print repr(k), "not handled"
             
         if motionChange == True:
+
             velocity = 0
-            velocity += VELOCITYCHANGE if self.callbackKeyUp is True else 0
-            velocity -= VELOCITYCHANGE if self.callbackKeyDown is True else 0
+
+            if self.callbackKeyUp is True:
+                velocity += VELOCITYCHANGE
+                self.callbackKeyUp = False
+            else:
+                velocity += 0
+
+            if self.callbackKeyDown is True:
+                velocity -= VELOCITYCHANGE
+            else:
+                velocity += 0
+            
             rotation = 0
             rotation += ROTATIONCHANGE if self.callbackKeyLeft is True else 0
             rotation -= ROTATIONCHANGE if self.callbackKeyRight is True else 0
@@ -227,40 +192,41 @@ class TetheredDriveApp(Tk):
 
             # create drive command
             cmd = struct.pack(">Bhh", 145, vr, vl)
-            if cmd != self.callbackKeyLastDriveCommand:
-                self.sendCommandRaw(cmd)
-                self.callbackKeyLastDriveCommand = cmd
+            self.sendCommandRaw(cmd)
+            self.lastDriveCommand = cmd
 
-    def onConnect(self):
+    def doConnect(self):
         global connection
 
         if connection is not None:
-            tkMessageBox.showinfo('Oops', "You're already connected!")
+            print 'Oops', "You're already connected!"
             return
 
         try:
             ports = self.getSerialPorts()
-            port = tkSimpleDialog.askstring('Port?', 'Enter COM port to open.\nAvailable options:\n' + '\n'.join(ports))
+            
+            port = raw_input('Available COM Ports:\n' + '\n'.join(ports) + '\n Enter a COM Port: ' )
         except EnvironmentError:
-            port = tkSimpleDialog.askstring('Port?', 'Enter COM port to open.')
+            port = raw_input('Enter COM port to open: ')
 
         if port is not None:
             print "Trying " + str(port) + "... "
             try:
                 connection = serial.Serial(port, baudrate=115200, timeout=1)
-                print "Connected!"
-                tkMessageBox.showinfo('Connected', "Connection succeeded!")
+                print 'Connected', "Connection succeeded!"
             except:
-                print "Failed."
-                tkMessageBox.showinfo('Failed', "Sorry, couldn't connect to " + str(port))
+                print 'Failed', "Sorry, couldn't connect to " + str(port)
 
 
-    def onHelp(self):
-        tkMessageBox.showinfo('Help', helpText)
+    def getHelp(self):
+        print 'Help \n'
+        print helpText
 
-    def onQuit(self):
-        if tkMessageBox.askyesno('Really?', 'Are you sure you want to quit?'):
-            self.destroy()
+    def doQuit(self):
+        if (raw_input('Are you sure you want to quit? ') == 'YES'):
+            return True
+        else:
+            return False
 
     def getSerialPorts(self):
         """Lists serial ports
@@ -292,8 +258,32 @@ class TetheredDriveApp(Tk):
                 result.append(port)
             except (OSError, serial.SerialException):
                 pass
+
+        if (result == ''):
+        	result = "No ports found"
+
         return result    
 
+class Main():
+
+    def __init__(self):
+        app = TetheredDriveApp()
+        
+        while(True):
+            key = raw_input("Enter a key: ")
+            if (key == 'HELP'):
+                app.getHelp()
+            elif (key == 'PORTS'):
+                app.getSerialPorts()
+            elif (key == 'QUIT'):
+                if (app.doQuit() == True):
+                    app.sendKey('PASSIVE')
+                    return
+            elif (key == 'CONNECT'):
+                app.doConnect()
+            else:    
+            	app.sendKey(key)
+        
+
 if __name__ == "__main__":
-    app = TetheredDriveApp()
-    app.mainloop()
+    main = Main()
