@@ -135,9 +135,10 @@ class TetheredDriveApp():
 
         motionChange = False
 
-        if (k == 'STOP'):  # Stop / Brake
-            self.motionChange = False
-            print 'Stopping'
+        if (k == 'STOP'):  # Stop
+            cmd = struct.pack(">Bhh", 145, 0, 0)
+            self.sendCommandRaw(cmd)
+            print 'Sending STOP Command \n'
         elif k == 'PASSIVE':   # Passive
             self.sendCommandASCII('128')
         elif k == 'SAFE': # Safe
@@ -183,9 +184,19 @@ class TetheredDriveApp():
                 velocity += 0
             
             rotation = 0
-            rotation += ROTATIONCHANGE if self.callbackKeyLeft is True else 0
-            rotation -= ROTATIONCHANGE if self.callbackKeyRight is True else 0
 
+            if self.callbackKeyLeft is True:
+                rotation += ROTATIONCHANGE
+                self.callbackKeyLeft = False
+            else:
+                rotation += 0
+
+            if self.callbackKeyRight is True:
+                rotation -= ROTATIONCHANGE
+                self.callbackKeyRight = False
+            else:
+                rotation -= 0
+                
             # compute left and right wheel velocities
             vr = velocity + (rotation/2)
             vl = velocity - (rotation/2)
@@ -193,7 +204,6 @@ class TetheredDriveApp():
             # create drive command
             cmd = struct.pack(">Bhh", 145, vr, vl)
             self.sendCommandRaw(cmd)
-            self.lastDriveCommand = cmd
 
     def doConnect(self):
         global connection
