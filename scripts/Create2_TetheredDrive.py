@@ -73,7 +73,7 @@ class TetheredDriveApp():
         self.callbackKeyLeft = False
         self.callbackKeyRight = False
         self.lastDriveCommand = ''
-
+        
     # sendCommandASCII takes a string of whitespace-separated, ASCII-encoded base 10 values to send
     def sendCommandASCII(self, command):
         cmd = ""
@@ -132,8 +132,8 @@ class TetheredDriveApp():
 
     # A handler for keyboard events. Feel free to add more!
     def sendKey(self, k):
-
-        motionChange = False
+        TIMEOUT =100000
+        motionChange = False 
         stop = False
 
         if (k == 'STOP'):  # Stop
@@ -150,6 +150,50 @@ class TetheredDriveApp():
             self.sendCommandASCII('135')
         elif k == 'DOCK': # Dock
             self.sendCommandASCII('143')
+        elif k == 'DISTANCE': # SENSE DISTANCE 1 unit = 1cm ??
+            self.sendCommandASCII('142 19')
+            sensor = self.getDecodedBytes(2,">h")
+            print "distance :  "
+            print sensor
+        elif k == 'ANGLE': # SENSE ANGLE   1 unit = 3 degree??
+            self.sendCommandASCII('142 20')
+            sensor = self.getDecodedBytes(2,">h")
+            print "angle :  "
+            print sensor
+        elif k == 'GO':
+            self.sendCommandASCII ('142 19') #sense distance
+            distance = self.getDecodedBytes(2, ">h")
+            distance = 0
+            watchdog =0
+            print distance, ' ', watchdog
+            cmd = struct.pack(">Bhh", 145, 200, 200)
+            self.sendCommandRaw(cmd)
+            while (distance > -28 and watchdog != TIMEOUT):
+                if ((watchdog % 1000) == 0):
+                    self.sendCommandASCII ('142 19')
+                    read = self.getDecodedBytes(2, ">h")
+                    distance += read
+                    print read, ' ',distance, ' ', watchdog
+                watchdog+=1 
+            cmd = struct.pack(">Bhh", 145, 0, 0)
+            self.sendCommandRaw(cmd)
+        elif k == 'TURN':
+            self.sendCommandASCII ('142 20') #sense angle
+            angle = self.getDecodedBytes(2, ">h")
+            angle = 0
+            watchdog =0
+            print angle, ' ', watchdog
+            cmd = struct.pack(">Bhh", 145, 150, -150)
+            self.sendCommandRaw(cmd)
+            while (angle < 90 and watchdog != TIMEOUT):
+                if ((watchdog % 8) == 0):
+                    self.sendCommandASCII ('142 20')
+                    read = self.getDecodedBytes(2, ">h")
+                    angle += read
+                    print read, ' ', angle, ' ', watchdog
+                watchdog+=1 
+            cmd = struct.pack(">Bhh", 145, 0, 0)
+            self.sendCommandRaw(cmd)    
         elif k == 'SPACE': # Beep
             self.sendCommandASCII('140 3 1 64 16 141 3')
         elif k == 'RESET': # Reset
@@ -181,6 +225,7 @@ class TetheredDriveApp():
 
             if self.callbackKeyDown is True:
                 velocity -= VELOCITYCHANGE
+                self.callbackKeyDown = False
             else:
                 velocity += 0
             
