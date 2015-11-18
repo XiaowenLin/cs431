@@ -157,15 +157,15 @@ class ObstacleAvoiderThread(Thread):
                 # We lost sufficient information at this point; reinitialize the obstacle avoider
                 self.old_gray = None
             else:
-                # Find median of all thresholded local scales
-                median_scale = np.median(thresh_scales)
+                # Find maximum of all thresholded local scales
+                median_scale = np.max(thresh_scales)
                 self.scale_array.append(median_scale)
                 self.median_filter_state += 1
                 
                 if self.median_filter_state == self.median_filter_size:
                     self.median_filter_state = 0
                     
-                    # Find median of the median local scale
+                    # Find median of the maximum local scale
                     median_scale = np.median(self.scale_array)
                     self.scale_array = []
                 
@@ -176,10 +176,10 @@ class ObstacleAvoiderThread(Thread):
                     start = end
                     
                     if median_scale == 0:
-                        print("\033[A\033[KMedian TTC = infinity")
+                        print("\033[A\033[KMinimum TTC = infinity")
                     else:
                         median_ttc = 1.0 / median_scale
-                        print("\033[A\033[KMedian TTC = %g sec"%(median_ttc * delta))
+                        print("\033[A\033[KMinimum TTC = %g sec"%(median_ttc * delta))
             
             img = cv2.add(the_frame, self.mask)
             cv2.imshow('frame', img)
