@@ -38,7 +38,7 @@
 
 import struct
 import sys, glob # for listing serial ports
-
+import time
 try:
     import serial
 except ImportError:
@@ -48,6 +48,11 @@ connection = None
 
 VELOCITYCHANGE = 200
 ROTATIONCHANGE = 300
+
+TIMEOUT =100
+TIME = .05
+VEL = 100
+ROT = 50
 
 class Command():
 
@@ -135,9 +140,65 @@ class TetheredDriveApp():
         elif (key == 'EM'):  # END MOVEMENT
             self.sendDriveCommand(0,0)    
         elif key in ['UP', 'DW']: #UP & DOWN
-            self.sendDriveCommand(0, self.motions[key].getValue())
+            self.sendDriveCommand( self.motions[key].getValue(),0)
         elif key in ['LT', 'RT']: #LEFT & RIGHT
-            self.sendDriveCommand(self.motions[key].getValue(), 0)
+            self.sendDriveCommand(0, self.motions[key].getValue())
+    
+    def doGo(self, num): 
+        self.sendCommandASCII ('142 19') #sense distance
+        distance = self.getDecodedBytes(2, ">h")
+        distance = 0
+        set_distance = float(num)
+        watchdog =0
+        cnt =0
+        if set_distance>0 :
+            direction =1
+        else:
+            direction =-1
+        print distance, ' ', watchdog
+        cmd = struct.pack(">Bhh", 145, direction*VEL, direction*VEL)
+        self.sendCommandRaw(cmd)
+        while (distance < (direction *set_distance) and watchdog != TIMEOUT):
+            time.sleep(TIME)
+            self.sendCommandASCII ('142 19')
+            read = self.getDecodedBytes(2, ">h")
+            distance -= read*direction
+            print read, ' ',distance, ' ', direction*set_distance, ' ', watchdog
+            watchdog+=1            
+            if read == 0:
+                cnt+=1
+            if cnt==3 :
+                watchdog = TIMEOUT
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)
+    def doTurn(self, num):
+        self.sendCommandASCII ('142 20') #sense angle
+        angle = self.getDecodedBytes(2, ">h")
+        angle = 0
+        set_angle = float(num)      
+        watchdog =0
+        cnt =0
+        if set_angle >0 :
+            direction =1
+        else:
+            direction =-1
+        print angle, ' ', set_angle, ' ', watchdog
+        cmd = struct.pack(">Bhh", 145, direction*ROT, direction*(-1 * ROT))
+        self.sendCommandRaw(cmd)
+        while ((angle < direction*set_angle) and watchdog != TIMEOUT):
+            time.sleep(TIME)
+            self.sendCommandASCII ('142 20')
+            read = 3 *self.getDecodedBytes(2, ">h")
+            angle += direction*read
+            print read, ' ', angle, ' ',set_angle, ' ', watchdog
+            watchdog+=1
+            if read == 0:
+                cnt +=1
+            if cnt == 3:
+                watchdog = TIMEOUT
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+        
 
 
     def sendDriveCommand(self, velocity, rotation): 
@@ -239,9 +300,18 @@ class Main():
         
         while(True):
             key = raw_input("Enter a key: ")
+            keys =key.split(' ')
 
             if key in ['H', 'PTS', 'Q', 'CT']:
                 self.assists[key].getValue()()
+            elif (key == 'GO'):
+                app.doGo(5)
+            elif (key== 'TURN'):
+                app.doTurn(0)
+            elif (keys[0] == 'GO'):
+                app.doGo(keys[1])
+            elif (keys[0] == 'TURN'):
+                app.doTurn(keys[1])
             else:    
             	app.sendKey(key)
         
