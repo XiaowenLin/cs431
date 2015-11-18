@@ -68,7 +68,6 @@ class TetheredDriveApp():
         self.commands = {'P': Command('PASSIVE', '128'), 'S': Command('SAFE', '131'), 'F': Command('FULL', '132'), 'C': Command('CLEAN', '135'), 'D': Command('DOCK', '143'), 'R': Command('RESET', '7'), 'B': Command('BEEP', '140 3 1 64 16 141 3')}
         self.assists = {'PTS': Command('PORTS', lambda: self.getSerialPorts()), 'Q': Command('QUIT', lambda: self.doQuit()), 'H': Command('HELP', lambda: self.getHelp()), 'CT': Command('CONNECT', lambda: self.doConnect())}
 
-
     def getAssistCommands(self):
         return self.assists
         
@@ -139,8 +138,7 @@ class TetheredDriveApp():
             self.sendDriveCommand(0, self.motions[key].getValue())
         elif key in ['LT', 'RT']: #LEFT & RIGHT
             self.sendDriveCommand(self.motions[key].getValue(), 0)
-        else:
-            print repr(key), "not handled"
+
 
     def sendDriveCommand(self, velocity, rotation): 
     	# compute left and right wheel velocities
