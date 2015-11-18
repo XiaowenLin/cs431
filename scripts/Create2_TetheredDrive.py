@@ -38,7 +38,7 @@
 
 import struct
 import sys, glob # for listing serial ports
-
+import time
 try:
     import serial
 except ImportError:
@@ -49,31 +49,33 @@ connection = None
 VELOCITYCHANGE = 200
 ROTATIONCHANGE = 300
 
-helpText = """\
+TIMEOUT =100
+TIME = .05
+VEL = 100
+ROT = 50
 
-Supported Commands:
+class Command():
 
-PASSIVE
-SAFE
-FULL
-CLEAN
-DOCK
-RESET
-UP
-DOWN
-RIGHT
-LEFT
-"""
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def getName(self):
+        return self.name
+
+    def getValue(self):
+        return self.value	
 
 class TetheredDriveApp():
 
     def __init__(self):
-        self.callbackKeyDown = False
-        self.callbackKeyUp = False
-        self.callbackKeyLeft = False
-        self.callbackKeyRight = False
-        self.lastDriveCommand = ''
+        self.motions = {'UP': Command('UP', -VELOCITYCHANGE), 'DW': Command('DOWN', VELOCITYCHANGE), 'RT': Command('RIGHT', -ROTATIONCHANGE), 'LT': Command('LEFT', ROTATIONCHANGE)}
+        self.commands = {'P': Command('PASSIVE', '128'), 'S': Command('SAFE', '131'), 'F': Command('FULL', '132'), 'C': Command('CLEAN', '135'), 'D': Command('DOCK', '143'), 'R': Command('RESET', '7'), 'B': Command('BEEP', '140 3 1 64 16 141 3')}
+        self.assists = {'PTS': Command('PORTS', lambda: self.getSerialPorts()), 'Q': Command('QUIT', lambda: self.doQuit()), 'H': Command('HELP', lambda: self.getHelp()), 'CT': Command('CONNECT', lambda: self.doConnect())}
 
+    def getAssistCommands(self):
+        return self.assists
+        
     # sendCommandASCII takes a string of whitespace-separated, ASCII-encoded base 10 values to send
     def sendCommandASCII(self, command):
         cmd = ""
@@ -131,81 +133,83 @@ class TetheredDriveApp():
         return getDecodedBytes(2, ">h")
 
     # A handler for keyboard events. Feel free to add more!
-    def sendKey(self, k):
+    def sendKey(self, key):
 
-        motionChange = False
-        stop = False
-
-        if (k == 'STOP'):  # Stop
-            cmd = struct.pack(">Bhh", 145, 0, 0)
-            self.sendCommandRaw(cmd)
-            print 'Sending STOP Command \n'
-        elif k == 'PASSIVE':   # Passive
-            self.sendCommandASCII('128')
-        elif k == 'SAFE': # Safe
-            self.sendCommandASCII('131')
-        elif k == 'FULL': # Full
-            self.sendCommandASCII('132')
-        elif k == 'CLEAN': # Clean
-            self.sendCommandASCII('135')
-        elif k == 'DOCK': # Dock
-            self.sendCommandASCII('143')
-        elif k == 'SPACE': # Beep
-            self.sendCommandASCII('140 3 1 64 16 141 3')
-        elif k == 'RESET': # Reset
-            self.sendCommandASCII('7')
-        elif k == 'UP':
-            self.callbackKeyUp = True
-            motionChange = True
-        elif k == 'DOWN':
-            self.callbackKeyDown = True
-            motionChange = True
-        elif k == 'LEFT':
-            self.callbackKeyLeft = True
-            motionChange = True
-        elif k == 'RIGHT':
-            self.callbackKeyRight = True
-            motionChange = True
+        if (key in ['P', 'S', 'F', 'C', 'D', 'B', 'R']):
+            self.sendCommandASCII(self.commands[key].getValue())
+        elif (key == 'EM'):  # END MOVEMENT
+            self.sendDriveCommand(0,0)    
+        elif key in ['UP', 'DW']: #UP & DOWN
+            self.sendDriveCommand( self.motions[key].getValue(),0)
+        elif key in ['LT', 'RT']: #LEFT & RIGHT
+            self.sendDriveCommand(0, self.motions[key].getValue())
+    
+    def doGo(self, num): 
+        self.sendCommandASCII ('142 19') #sense distance
+        distance = self.getDecodedBytes(2, ">h")
+        distance = 0
+        set_distance = float(num)
+        watchdog =0
+        cnt =0
+        if set_distance>0 :
+            direction =1
         else:
-            print repr(k), "not handled"
+            direction =-1
+        print distance, ' ', watchdog
+        cmd = struct.pack(">Bhh", 145, direction*VEL, direction*VEL)
+        self.sendCommandRaw(cmd)
+        while (distance < (direction *set_distance) and watchdog != TIMEOUT):
+            time.sleep(TIME)
+            self.sendCommandASCII ('142 19')
+            read = self.getDecodedBytes(2, ">h")
+            distance -= read*direction
+            print read, ' ',distance, ' ', direction*set_distance, ' ', watchdog
+            watchdog+=1            
+            if read == 0:
+                cnt+=1
+            if cnt==3 :
+                watchdog = TIMEOUT
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)
+    def doTurn(self, num):
+        self.sendCommandASCII ('142 20') #sense angle
+        angle = self.getDecodedBytes(2, ">h")
+        angle = 0
+        set_angle = float(num)      
+        watchdog =0
+        cnt =0
+        if set_angle >0 :
+            direction =1
+        else:
+            direction =-1
+        print angle, ' ', set_angle, ' ', watchdog
+        cmd = struct.pack(">Bhh", 145, direction*ROT, direction*(-1 * ROT))
+        self.sendCommandRaw(cmd)
+        while ((angle < direction*set_angle) and watchdog != TIMEOUT):
+            time.sleep(TIME)
+            self.sendCommandASCII ('142 20')
+            read = 3 *self.getDecodedBytes(2, ">h")
+            angle += direction*read
+            print read, ' ', angle, ' ',set_angle, ' ', watchdog
+            watchdog+=1
+            if read == 0:
+                cnt +=1
+            if cnt == 3:
+                watchdog = TIMEOUT
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+        
 
-        if motionChange == True:
 
-            velocity = 0
+    def sendDriveCommand(self, velocity, rotation): 
+    	# compute left and right wheel velocities
+        vr = velocity + (rotation/2)
+        vl = velocity - (rotation/2)
 
-            if self.callbackKeyUp is True:
-                velocity += VELOCITYCHANGE
-                self.callbackKeyUp = False
-            else:
-                velocity += 0
-
-            if self.callbackKeyDown is True:
-                velocity -= VELOCITYCHANGE
-            else:
-                velocity += 0
-            
-            rotation = 0
-
-            if self.callbackKeyLeft is True:
-                rotation += ROTATIONCHANGE
-                self.callbackKeyLeft = False
-            else:
-                rotation += 0
-
-            if self.callbackKeyRight is True:
-                rotation -= ROTATIONCHANGE
-                self.callbackKeyRight = False
-            else:
-                rotation -= 0
-                
-            # compute left and right wheel velocities
-            vr = velocity + (rotation/2)
-            vl = velocity - (rotation/2)
-
-            # create drive command
-            cmd = struct.pack(">Bhh", 145, vr, vl)
-            self.sendCommandRaw(cmd)
-
+        # create drive command
+        cmd = struct.pack(">Bhh", 145, vr, vl)
+        self.sendCommandRaw(cmd)
+    	
     def doConnect(self):
         global connection
 
@@ -230,14 +234,27 @@ class TetheredDriveApp():
 
 
     def getHelp(self):
-        print 'Help \n'
-        print helpText
+        print '\nHelp \n'
+        print 'Operation Commands: \n'
+        for key, value in self.commands.iteritems():
+            print key + " \t " + value.getName()
+        print "\n"    
+
+        print 'Movement Commands: \n'
+        for key, value in self.motions.iteritems():
+            print key + " \t " + value.getName()
+        print "\n"
+
+        print 'Assist Commands: \n'
+        for key, value in self.assists.iteritems():
+            print key + " \t " + value.getName()
+        print "\n"    
 
     def doQuit(self):
         if (raw_input('Are you sure you want to quit? ') == 'YES'):
-            return True
-        else:
-            return False
+            if connection:
+                self.sendKey('P')
+            quit()
 
     def getSerialPorts(self):
         """Lists serial ports
@@ -279,19 +296,22 @@ class Main():
 
     def __init__(self):
         app = TetheredDriveApp()
+        self.assists = app.getAssistCommands()
         
         while(True):
             key = raw_input("Enter a key: ")
-            if (key == 'HELP'):
-                app.getHelp()
-            elif (key == 'PORTS'):
-                app.getSerialPorts()
-            elif (key == 'QUIT'):
-                if (app.doQuit() == True):
-                    app.sendKey('PASSIVE')
-                    return
-            elif (key == 'CONNECT'):
-                app.doConnect()
+            keys =key.split(' ')
+
+            if key in ['H', 'PTS', 'Q', 'CT']:
+                self.assists[key].getValue()()
+            elif (key == 'GO'):
+                app.doGo(5)
+            elif (key== 'TURN'):
+                app.doTurn(0)
+            elif (keys[0] == 'GO'):
+                app.doGo(keys[1])
+            elif (keys[0] == 'TURN'):
+                app.doTurn(keys[1])
             else:    
             	app.sendKey(key)
         
