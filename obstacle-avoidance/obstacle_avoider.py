@@ -134,7 +134,7 @@ class ObstacleAvoiderThread(Thread):
                 # We lost all tracking at this point; reinitialize the obstacle
                 # avoider
                 self.old_gray = None
-                self.imgdisp_cb(cv2, img)
+                self.imgdisp_cb(cv2, the_frame)
                 k = cv2.waitKey(30) & 0xff
                 if k == 27: # Was escape pressed?
                     break
@@ -209,13 +209,13 @@ class ObstacleAvoiderThread(Thread):
                 self.old_gray = None
             else:
                 # Find max local scale on left half of screen
-                _, left_max_scale, left_thresh_scales = \
+                _, left_max_scale, _ = \
                     ObstacleAvoiderThread.filter_local_scales( \
                         self.left_scales, num_left_scales, \
                         threshold=threshold)
 
                 # Find max local scale on right half of screen
-                _, right_max_scale, right_thresh_scales = \
+                _, right_max_scale, _ = \
                     ObstacleAvoiderThread.filter_local_scales( \
                         self.right_scales, num_right_scales, \
                         threshold=threshold)
