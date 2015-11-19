@@ -188,7 +188,7 @@ class TetheredDriveApp():
         while ((angle < direction*set_angle) and watchdog != TIMEOUT):
             time.sleep(TIME)
             self.sendCommandASCII ('142 20')
-            read = 3 *self.getDecodedBytes(2, ">h")
+            read = 2.96 *self.getDecodedBytes(2, ">h")
             angle += direction*read
             print read, ' ', angle, ' ',set_angle, ' ', watchdog
             watchdog+=1
@@ -304,10 +304,6 @@ class Main():
 
             if key in ['H', 'PTS', 'Q', 'CT']:
                 self.assists[key].getValue()()
-            elif (key == 'GO'):
-                app.doGo(5)
-            elif (key== 'TURN'):
-                app.doTurn(0)
             elif (keys[0] == 'GO'):
                 app.doGo(keys[1])
             elif (keys[0] == 'TURN'):
