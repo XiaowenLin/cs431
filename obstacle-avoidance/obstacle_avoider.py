@@ -119,7 +119,7 @@ class ObstacleAvoiderThread(Thread):
             if p1 is None:
                 # We lost all tracking at this point; reinitialize the obstacle avoider
                 self.old_gray = None
-                cv2.imshow('frame', the_frame)
+                self.imgdisp_cb(cv2, img)
                 k = cv2.waitKey(30) & 0xff
                 if k == 27: # Was escape pressed?
                     break
