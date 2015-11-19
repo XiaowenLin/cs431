@@ -339,7 +339,6 @@ class ObstacleAvoider:
         """
         self.thread = ObstacleAvoiderThread()
 
-    # avoider.imgdisp(cv2, img)
     def set_imgdisp_cb(self, imgdisp_cb):
         """
         Setter for the image display callback. imgdisp_cb takes on the
@@ -353,7 +352,6 @@ class ObstacleAvoider:
         """
         self.thread.set_imgdisp_cb(imgdisp_cb)
 
-    # avoider.min_ttc(min_ttc)
     def set_min_ttc_cb(self, min_ttc_cb):
         """
         Setter for the minimum TTC value callback, which is called when the
@@ -366,7 +364,6 @@ class ObstacleAvoider:
         """
         self.thread.set_min_ttc_cb(min_ttc_cb)
 
-    # avoider.balance_strategy(left_ttc, right_ttc)
     def set_balance_strategy_cb(self, balance_strategy_cb):
         """
         Setter for the balance strategy callback, which is called when the

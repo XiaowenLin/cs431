@@ -28,7 +28,6 @@ class GenericCameraIterator:
         """
         return self
 
-    # Iterate and grab frames indefinitely
     def next(self):
         """
         Retrieves the next frame and returns it.
