@@ -332,6 +332,7 @@ class ObstacleAvoider:
         time-to-collision (TTC) calculations.
         """
         self.thread = ObstacleAvoiderThread()
+        self.thread.daemon = True
 
     def set_imgdisp_cb(self, imgdisp_cb):
         """

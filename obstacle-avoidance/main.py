@@ -1,5 +1,7 @@
 import sys
 from obstacle_avoider import ObstacleAvoider
+import threading
+import time
 
 def imgdisp(cv2, img):
     cv2.imshow('frame', img)
@@ -17,7 +19,8 @@ def main(argv):
     avoider.set_min_ttc_cb(min_ttc)
     print("\n")
     avoider.start()
-    avoider.join()
+    while threading.active_count() > 1:
+        time.sleep(0.1)
     return 0
 
 if __name__ == "__main__":
