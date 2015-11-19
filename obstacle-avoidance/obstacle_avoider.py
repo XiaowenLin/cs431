@@ -22,6 +22,7 @@ __author__ = "Ron Wright"
 __copyright__ = "Copyright 2015 Ronald Joseph Wright"
 __maintainer__ = "Ron Wright"
 
+from optical_flow_drawer import OpticalFlowDrawer
 from median_filter import MedianFilter
 from threading import Thread
 import numpy as np
@@ -52,14 +53,14 @@ class ObstacleAvoiderThread(Thread):
                                     minDistance = 7,
                                     blockSize = 7 )
 
-        # Parameters for lucas kanade optical flow
+        # Parameters for Lucas-Kanade optical flow
         self.lk_params = dict( winSize = (15,15),
                                maxLevel = 2,
                                criteria = (cv2.TERM_CRITERIA_EPS | \
                                            cv2.TERM_CRITERIA_COUNT, 10, 0.03) )
 
-        # Create some random colors
-        self.color = np.random.randint(0, 255, (100, 3))
+        # Initialize optical drawing class
+        self.drawer = OpticalFlowDrawer(100)
 
         # Create array for line equations
         self.lines = np.zeros((100, 3))
@@ -72,7 +73,6 @@ class ObstacleAvoiderThread(Thread):
 
         self.old_gray = None
         self.p0 = None
-        self.mask = None
 
         # Callbacks
         self.imgdisp_cb = None
@@ -168,11 +168,12 @@ class ObstacleAvoiderThread(Thread):
         snapshot, which is useful for deciding whether to make a left or right
         turn. The thread runs until the user decides to terminate it.
 
-        This function should not be called directly outside this class.
+        This function should not be used directly outside this class.
         """
         start = None
         for frame in self.camera.get_iterator():
             the_frame = self.camera.get_frame(frame)
+            self.drawer.set_frame(the_frame)
 
             if self.old_gray is None:
                 # Take first frame and find corners in it
@@ -180,8 +181,8 @@ class ObstacleAvoiderThread(Thread):
                 self.p0 = cv2.goodFeaturesToTrack(self.old_gray, mask = None, \
                                                   **self.feature_params)
 
-                # Create a mask image for drawing purposes
-                self.mask = np.zeros_like(the_frame)
+                # Reset the state of the optical drawing class
+                self.drawer.reset()
 
                 # Move on to next frame capture
                 start = time.time()
@@ -238,7 +239,7 @@ class ObstacleAvoiderThread(Thread):
                                 old_point - old_neighborhood, axis=1))
                             local_scale = (sum1 - sum2) / sum2
 
-                            if (2*new_point[1]) > np.shape(frame_gray)[1]:
+                            if (2*new_point[1]) >= np.shape(frame_gray)[1]:
                                 self.left_scales[num_left_scales] = local_scale
                                 num_left_scales += 1
                             else:
@@ -251,16 +252,8 @@ class ObstacleAvoiderThread(Thread):
                 except (QhullError, ValueError):
                     pass
 
-            # draw the tracks
-            for i,(new, old) in enumerate(zip(good_new,good_old)):
-                # draw the optical flow vector
-                a,b = new.ravel()
-                c,d = old.ravel()
-
-                # original Python code is misusing the cv2.line() and
-                # cv2.circle() calls
-                cv2.line(self.mask, (a,b),(c,d), self.color[i].tolist(), 2)
-                cv2.circle(the_frame, (a,b),5,self.color[i].tolist(),-1)
+            # Draw the tracks
+            self.drawer.draw_tracks(good_old, good_new)
 
             # Find max local scale on whole screen
             threshold, max_scale, thresh_scales = \
@@ -308,7 +301,8 @@ class ObstacleAvoiderThread(Thread):
                                 else delta / right_median_max_scale
                     self.balance_strategy_cb(left_ttc, right_ttc)
 
-            img = cv2.add(the_frame, self.mask)
+            img = cv2.add(the_frame, self.drawer.get_current_mask())
+            self.drawer.update_frame_state()
             self.imgdisp_cb(cv2, img)
 
             k = cv2.waitKey(30) & 0xff
