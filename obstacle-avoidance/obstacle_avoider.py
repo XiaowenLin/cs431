@@ -29,7 +29,7 @@ class ObstacleAvoiderThread(Thread):
         Thread.__init__(self)
 
         # Initialize camera
-        self.camera = GenericCamera() # Once we're ready to test on the Pi, we just change this initialization to ThePiCamera()
+        self.camera = GenericCamera()
 
         # params for ShiTomasi corner detection
         self.feature_params = dict( maxCorners = 100,
