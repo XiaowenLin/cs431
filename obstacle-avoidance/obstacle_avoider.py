@@ -8,6 +8,7 @@
 #
 #   apt-get install python-numpy python-scipy python-opencv
 
+from median_filter import MedianFilter
 from threading import Thread
 import numpy as np
 from scipy.spatial import Delaunay
@@ -40,7 +41,8 @@ class ObstacleAvoiderThread(Thread):
         # Parameters for lucas kanade optical flow
         self.lk_params = dict( winSize = (15,15),
                                maxLevel = 2,
-                               criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT, 10, 0.03) )
+                               criteria = (cv2.TERM_CRITERIA_EPS | \
+                                           cv2.TERM_CRITERIA_COUNT, 10, 0.03) )
 
         # Create some random colors
         self.color = np.random.randint(0, 255, (100, 3))
@@ -52,11 +54,7 @@ class ObstacleAvoiderThread(Thread):
         self.right_scales = np.zeros((100, 1))
 
         # Median filtering for smoother TTC computations
-        self.median_filter_state = 0
-        self.median_filter_size = 5
-        self.scale_array = []
-        self.left_scale_array = []
-        self.right_scale_array = []
+        self.scale_filter = MedianFilter(3)
 
         self.old_gray = None
         self.p0 = None
@@ -88,10 +86,24 @@ class ObstacleAvoiderThread(Thread):
                 index_set_2 = index_set - set([index])
                 if len(index_set_2) != 0:
                     if neighbor_dict.get(index):
-                        neighbor_dict[index] = neighbor_dict[index] | index_set_2
+                        neighbor_dict[index] = neighbor_dict[index] | \
+                                               index_set_2
                     else:
                         neighbor_dict[index] = index_set_2
         return neighbor_dict
+
+    @staticmethod
+    def filter_local_scales(local_scales, num_localscales, threshold=None):
+        thresh_scales = local_scales[:num_localscales]
+        the_threshold = threshold
+        max_local_scale = 0
+        if len(thresh_scales) != 0:
+            if threshold is None:
+                the_threshold = 0.1 * thresh_scales.max()
+            thresh_scales = thresh_scales[thresh_scales > the_threshold]
+        if len(thresh_scales) != 0:
+            max_local_scale = np.max(thresh_scales)
+        return the_threshold, max_local_scale, thresh_scales
 
     def run(self):
         start = None
@@ -101,23 +113,26 @@ class ObstacleAvoiderThread(Thread):
             if self.old_gray is None:
                 # Take first frame and find corners in it
                 self.old_gray = cv2.cvtColor(the_frame, cv2.COLOR_BGR2GRAY)
-                self.p0 = cv2.goodFeaturesToTrack(self.old_gray, mask = None, **self.feature_params)
+                self.p0 = cv2.goodFeaturesToTrack(self.old_gray, mask = None, \
+                                                  **self.feature_params)
 
                 # Create a mask image for drawing purposes
                 self.mask = np.zeros_like(the_frame)
 
                 # Move on to next frame capture
                 start = time.time()
-                self.median_filter_state = 0
-                self.scale_array = []
+                self.scale_filter.reset_filter()
                 continue
 
             frame_gray = cv2.cvtColor(the_frame, cv2.COLOR_BGR2GRAY)
 
             # calculate optical flow
-            p1, st, _ = cv2.calcOpticalFlowPyrLK(self.old_gray, frame_gray, self.p0, None, **self.lk_params)
+            p1, st, _ = cv2.calcOpticalFlowPyrLK(self.old_gray, frame_gray, \
+                                                 self.p0, None, \
+                                                 **self.lk_params)
             if p1 is None:
-                # We lost all tracking at this point; reinitialize the obstacle avoider
+                # We lost all tracking at this point; reinitialize the obstacle
+                # avoider
                 self.old_gray = None
                 self.imgdisp_cb(cv2, img)
                 k = cv2.waitKey(30) & 0xff
@@ -139,7 +154,8 @@ class ObstacleAvoiderThread(Thread):
             if len(good_old) >= 4:
                 try:
                     old_triangles = Delaunay(good_old).simplices
-                    neighborhoods = ObstacleAvoiderThread.find_neighborhoods(old_triangles)
+                    neighborhoods = ObstacleAvoiderThread.find_neighborhoods( \
+                        old_triangles)
                     for (k, v) in neighborhoods.items():
                         index_arr = np.array(list(v))
 
@@ -151,16 +167,19 @@ class ObstacleAvoiderThread(Thread):
                         new_neighborhood = good_new[index_arr]
                         old_neighborhood = good_old[index_arr]
 
-                        sum2 = np.sum(np.linalg.norm(new_point - new_neighborhood, axis=1))
+                        sum2 = np.sum(np.linalg.norm( \
+                            new_point - new_neighborhood, axis=1))
                         if sum2 != 0:
-                            sum1 = np.sum(np.linalg.norm(old_point - old_neighborhood, axis=1))
+                            sum1 = np.sum(np.linalg.norm( \
+                                old_point - old_neighborhood, axis=1))
                             local_scale = (sum1 - sum2) / sum2
 
                             if (2*new_point[1]) > np.shape(frame_gray)[1]:
                                 self.left_scales[num_left_scales] = local_scale
                                 num_left_scales += 1
                             else:
-                                self.right_scales[num_right_scales] = local_scale
+                                self.right_scales[num_right_scales] = \
+                                    local_scale
                                 num_right_scales += 1
 
                             self.local_scales[num_localscales] = local_scale
@@ -179,55 +198,42 @@ class ObstacleAvoiderThread(Thread):
                 cv2.line(self.mask, (a,b),(c,d), self.color[i].tolist(), 2)
                 cv2.circle(the_frame, (a,b),5,self.color[i].tolist(),-1)
 
-            thresh_scales = self.local_scales[:num_localscales]
-            threshold = 0
-            if len(thresh_scales) != 0:
-                threshold = 0.1 * thresh_scales.max()
-                thresh_scales = thresh_scales[thresh_scales > threshold]
+            # Find max local scale on whole screen
+            threshold, max_scale, thresh_scales = \
+                ObstacleAvoiderThread.filter_local_scales( \
+                    self.local_scales, num_localscales)
 
             if len(thresh_scales) == 0:
-                # We lost sufficient information at this point; reinitialize the obstacle avoider
+                # We lost sufficient information at this point; reinitialize
+                # the obstacle avoider
                 self.old_gray = None
             else:
-                # Find median local scale on left half of screen
-                left_thresh_scales = self.left_scales[:num_left_scales]
-                left_max_scale = 0
-                if len(left_thresh_scales) != 0:
-                    left_thresh_scales = left_thresh_scales[left_thresh_scales > threshold]
-                if len(left_thresh_scales) != 0:
-                    left_max_scale = np.max(left_thresh_scales)
+                # Find max local scale on left half of screen
+                _, left_max_scale, left_thresh_scales = \
+                    ObstacleAvoiderThread.filter_local_scales( \
+                        self.left_scales, num_left_scales, \
+                        threshold=threshold)
 
-                # Find median local scale on right half of screen
-                right_thresh_scales = self.right_scales[:num_right_scales]
-                right_max_scale = 0
-                if len(right_thresh_scales) != 0:
-                    right_thresh_scales = right_thresh_scales[right_thresh_scales > threshold]
-                if len(right_thresh_scales) != 0:
-                    right_max_scale = np.max(right_thresh_scales)
+                # Find max local scale on right half of screen
+                _, right_max_scale, right_thresh_scales = \
+                    ObstacleAvoiderThread.filter_local_scales( \
+                        self.right_scales, num_right_scales, \
+                        threshold=threshold)
 
-                # Find maximum of all thresholded local scales
-                max_scale = np.max(thresh_scales)
-                self.scale_array.append(max_scale)
-                self.left_scale_array.append(left_max_scale)
-                self.right_scale_array.append(right_max_scale)
-                self.median_filter_state += 1
+                # Find maximum in each set of thresholded local scales
+                self.scale_filter.set_filter_values( \
+                    (max_scale, left_max_scale, right_max_scale))
+                medians = self.scale_filter.update_filter()
 
-                if self.median_filter_state == self.median_filter_size:
-                    self.median_filter_state = 0
-
-                    # Find median of the maximum local scale
-                    median_max_scale = np.median(self.scale_array)
-                    left_median_max_scale = np.median(self.left_scale_array)
-                    right_median_max_scale = np.median(self.right_scale_array)
-
-                    self.scale_array = []
-                    self.left_scale_array = []
-                    self.right_scale_array = []
+                if medians is not None:
+                    # Find median of each maximum local scale
+                    median_max_scale, left_median_max_scale, \
+                                      right_median_max_scale = medians
 
                     # Find change in time, keeping in mind that we must
                     # compensate for median filtering.
                     end = time.time()
-                    delta = (end - start) / self.median_filter_size
+                    delta = (end - start) / self.scale_filter.filter_size
                     start = end
 
                     self.min_ttc_cb(float('inf') if median_max_scale == 0 \
