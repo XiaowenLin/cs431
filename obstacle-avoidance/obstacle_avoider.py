@@ -47,7 +47,7 @@ class ObstacleAvoiderThread(Thread):
         # Initialize camera
         self.camera = GenericCamera()
 
-        # params for ShiTomasi corner detection
+        # Parameters for Shi-Tomasi corner detection
         self.feature_params = dict( maxCorners = 100,
                                     qualityLevel = 0.3,
                                     minDistance = 7,
@@ -59,7 +59,7 @@ class ObstacleAvoiderThread(Thread):
                                criteria = (cv2.TERM_CRITERIA_EPS | \
                                            cv2.TERM_CRITERIA_COUNT, 10, 0.03) )
 
-        # Initialize optical drawing class
+        # Initialize optical flow drawing class
         self.drawer = OpticalFlowDrawer(100)
 
         # Create array for line equations
@@ -181,7 +181,7 @@ class ObstacleAvoiderThread(Thread):
                 self.p0 = cv2.goodFeaturesToTrack(self.old_gray, mask = None, \
                                                   **self.feature_params)
 
-                # Reset the state of the optical drawing class
+                # Reset the state of the optical flow drawing class
                 self.drawer.reset()
 
                 # Move on to next frame capture
@@ -191,7 +191,7 @@ class ObstacleAvoiderThread(Thread):
 
             frame_gray = cv2.cvtColor(the_frame, cv2.COLOR_BGR2GRAY)
 
-            # calculate optical flow
+            # Calculate optical flow
             p1, st, _ = cv2.calcOpticalFlowPyrLK(self.old_gray, frame_gray, \
                                                  self.p0, None, \
                                                  **self.lk_params)
