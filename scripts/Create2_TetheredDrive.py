@@ -39,6 +39,7 @@
 import struct
 import sys, glob # for listing serial ports
 import time
+import math
 try:
     import serial
 except ImportError:
@@ -199,7 +200,25 @@ class TetheredDriveApp():
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
         
-
+    def doNav(self, direction, x, y, x_set, y_set):
+         x_offset =100 * ( x_set - x)
+         y_offset =100 * (y_set - y)
+         if (y_offset):
+             angle = 180 / math.pi * math.atan(x_offset/y_offset)             
+         if (x_offset <0 ):
+             angle -= 180
+             
+         angle -= direction
+         
+         if (angle > 180):
+             angle = 360 -angle
+         elif angle < -180:
+             angle += 360
+             
+         distance  = (x_offset**2 + y_offset**2 )**0.5
+         print 'TURN ', angle, ', THEN GO ', distance
+         self.doTurn(angle)
+         self.doGo(distance)
 
     def sendDriveCommand(self, velocity, rotation): 
     	# compute left and right wheel velocities
@@ -308,6 +327,8 @@ class Main():
                 app.doGo(keys[1])
             elif (keys[0] == 'TURN'):
                 app.doTurn(keys[1])
+            elif (keys[0] == 'NAV'):
+                app.doNav(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
             else:    
             	app.sendKey(key)
         
