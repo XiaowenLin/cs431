@@ -7,19 +7,32 @@ features:
 2. send command for vedio streaming through socket from control device
    send vedio streaming to assigned destination
 """
-import json
 from __init__ import *
+import json
 import socket               
 
-# create a socket object
-s = socket.socket()         
-s.connect((TCP_HOST, TCP_PORT))
+def send_msg(msg_s):
+   """
+   >>> msg = {'topic': 'instruction',
+              'instruction': '145 0 0 0'}
+   >>> msg_s = json.dumps(msg)
+   >>> send_msg(msg_s)
+   200
+   """
+   # create a socket object
+   s = socket.socket()         
+   s.connect((TCP_HOST, TCP_PORT))
 
-msg = {'topic': 'instruction',
+
+   s.send(msg_s)
+   recv_s = s.recv(BUFFER_SIZE)
+   recv = json.loads(recv_s)
+   logging.debug(recv['status'])
+   s.close                     # Close the socket when done
+   return recv
+
+if __name__ == '__main__':
+    msg = {'topic': 'instruction',
        'instruction': '145 0 0 0'}
-msg_s = json.dumps(msg)
-s.send(msg_s)
-recv_s = s.recv(BUFFER_SIZE)
-recv = json.loads(recv_s)
-print recv['status']
-s.close                     # Close the socket when done
+    msg_s = json.dumps(msg)
+    send_msg(msg_s)

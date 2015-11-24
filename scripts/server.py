@@ -10,19 +10,37 @@ features:
 import json
 from __init__ import *
 import socket               # Import socket module
+import threading
 
-# define messages
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)         # Create a socket object
-s.bind((TCP_HOST, TCP_PORT))        # Bind to the port
-s.listen(5)                 # Now wait for client connection. 5 is the number of backlog
 
-msg = {'status': 200}
-msg_s = json.dumps(msg)
-conn, addr = s.accept()
-print 'connection address:', addr
-while 1:
-    data = conn.recv(BUFFER_SIZE)
-    if not data: break
-    print "received data:", data
-    conn.send(msg_s)  # echo
-conn.close()
+class Server:
+   ok_msg_s = json.dumps( {'status': 200} )
+   total_request = 0
+   count_lock = threading.Lock()
+   def __init__(self, backlog=5):
+       self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)         # Create a socket object
+       self.s.bind((TCP_HOST, TCP_PORT))                                  # Bind to the port
+       self.s.listen(backlog)                                             # Now wait for client connection. 
+
+   def handle_request(self, conn, addr):
+       Server.count_lock.acquire()
+       Server.total_request += 1
+       logging.debug('total request = %d', Server.total_request)
+       Server.count_lock.release()
+       print 'connection address:', addr
+       data = conn.recv(BUFFER_SIZE)
+       if not data: return
+       logging.debug("received data: %s", data)
+       #TODO: do something based on data
+       conn.send(Server.ok_msg_s)  # echo
+       conn.close()
+       return
+
+if __name__ == '__main__':
+    server = Server()
+    threads = []
+    while True:
+        conn, addr = server.s.accept()
+        t = threading.Thread(target=server.handle_request, args=(conn, addr))
+        t.start()
+        
