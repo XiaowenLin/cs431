@@ -5,4 +5,6 @@ Server on the beagle board should receive commands thru TCP/IP using JSON format
 Server uses multithreading to handle each request. 
 Update HOST variable in __init__.py file to the inet of beagle board so that the connection will work. 
 
-
+TODO:
+1. define how JSON will encode commands in github wikipage
+2. add to server.py to control roomba based on commands from client. add an execution queue in server, so that all commands received will be executed in order. 
