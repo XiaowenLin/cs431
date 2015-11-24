@@ -1,2 +1,8 @@
 irobot project code
 
+Server is a thin layer between all codes implementing robot features and control program. 
+Server on the beagle board should receive commands thru TCP/IP using JSON format, and will send back status code in the same way. 
+Server uses multithreading to handle each request. 
+Update HOST variable in __init__.py file to the inet of beagle board so that the connection will work. 
+
+
