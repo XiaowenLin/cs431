@@ -119,19 +119,19 @@ class TetheredDriveApp():
 
     # get8Unsigned returns an 8-bit unsigned value.
     def get8Unsigned(self):
-        return getDecodedBytes(1, "B")
+        return self.getDecodedBytes(1, "B")
 
     # get8Signed returns an 8-bit signed value.
     def get8Signed(self):
-        return getDecodedBytes(1, "b")
+        return self.getDecodedBytes(1, "b")
 
     # get16Unsigned returns a 16-bit unsigned value.
     def get16Unsigned(self):
-        return getDecodedBytes(2, ">H")
+        return self.getDecodedBytes(2, ">H")
 
     # get16Signed returns a 16-bit signed value.
     def get16Signed(self):
-        return getDecodedBytes(2, ">h")
+        return self.getDecodedBytes(2, ">h")
 
     # A handler for keyboard events. Feel free to add more!
     def sendKey(self, key):
@@ -144,6 +144,45 @@ class TetheredDriveApp():
             self.sendDriveCommand( self.motions[key].getValue(),0)
         elif key in ['LT', 'RT']: #LEFT & RIGHT
             self.sendDriveCommand(0, self.motions[key].getValue())
+    def senseWall (self):
+        self.sendCommandASCII ('142 45') #sense wall
+        wall = self.getDecodedBytes(1, ">B")
+        print "Wall : ", wall
+        return wall
+    
+    def doGo2(self, num): 
+        self.sendCommandASCII ('142 19') #sense distance
+        distance = self.getDecodedBytes(2, ">h")
+        distance = 0
+        set_distance = float(num)
+        watchdog =0
+        cnt =0
+        if set_distance>0 :
+            direction =1
+        else:
+            direction =-1
+        print distance, ' ', watchdog
+        cmd = struct.pack(">Bhh", 145, direction*VEL, direction*VEL)
+        self.sendCommandRaw(cmd)
+        while (distance < (direction *set_distance) and watchdog != TIMEOUT):
+            if (direction==1 and self.senseWall()):
+                print '>>>>A Wall Ahead'
+                cmd = struct.pack(">Bhh", 145, 0, 0)
+                self.sendCommandRaw(cmd)
+                return float(num) - distance
+            time.sleep(TIME)
+            self.sendCommandASCII ('142 19')
+            read = self.getDecodedBytes(2, ">h")
+            distance -= read*direction
+            print distance, ' ', direction*set_distance, ' ', watchdog
+            watchdog+=1            
+            if read == 0:
+                cnt+=1
+            if cnt==3 :
+                watchdog = TIMEOUT
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)
+        return 0
     
     def doGo(self, num): 
         self.sendCommandASCII ('142 19') #sense distance
@@ -164,7 +203,7 @@ class TetheredDriveApp():
             self.sendCommandASCII ('142 19')
             read = self.getDecodedBytes(2, ">h")
             distance -= read*direction
-            print read, ' ',distance, ' ', direction*set_distance, ' ', watchdog
+            print distance, ' ', direction*set_distance, ' ', watchdog
             watchdog+=1            
             if read == 0:
                 cnt+=1
@@ -189,9 +228,9 @@ class TetheredDriveApp():
         while ((angle < direction*set_angle) and watchdog != TIMEOUT):
             time.sleep(TIME)
             self.sendCommandASCII ('142 20')
-            read = 2.96 *self.getDecodedBytes(2, ">h")
+            read = 3.53 *self.getDecodedBytes(2, ">h")
             angle += direction*read
-            print read, ' ', angle, ' ',set_angle, ' ', watchdog
+            print  angle, ' ',set_angle, ' ', watchdog
             watchdog+=1
             if read == 0:
                 cnt +=1
@@ -199,7 +238,49 @@ class TetheredDriveApp():
                 watchdog = TIMEOUT
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
+
         
+    def doNav2(self, direction, x, y, x_set, y_set):
+         x_offset =100 * ( x_set - x)
+         y_offset =100 * (y_set - y)
+         angle =0
+         if (y_offset):
+             angle = 180 / math.pi * math.atan(x_offset/y_offset)             
+         if (x_offset <0 ):
+             angle -= 180
+             
+         angle -= direction
+         
+         if (angle > 180):
+             angle = 360 -angle
+         elif angle < -180:
+             angle += 360
+             
+         distance  = (x_offset**2 + y_offset**2 )**0.5
+         print 'TURN ', angle, ', THEN GO ', distance
+         self.doTurn(angle)
+         
+         remain =self.doGo2(distance)
+         sum_angle =0
+         while (remain):
+             print 'Remaining distance', remain
+             self.doTurn( 90)
+             sum_angle += 90
+             self.doGo2 (50)
+             angle = -180 / math.pi *math.atan (50/remain) -90
+             print 'New angle', angle
+             if (angle > 180):
+                 angle = 360 -angle
+             elif angle < -180:
+                 angle += 360
+             self.doTurn( angle)
+             sum_angle += angle   
+             distance  = (remain**2 + 50**2 )**0.5
+             print 'New Distance', distance
+             remain = self.doGo2 (distance)
+         self.doTurn(-sum_angle)    
+                
+         
     def doNav(self, direction, x, y, x_set, y_set):
          x_offset =100 * ( x_set - x)
          y_offset =100 * (y_set - y)
@@ -324,11 +405,11 @@ class Main():
             if key in ['H', 'PTS', 'Q', 'CT']:
                 self.assists[key].getValue()()
             elif (keys[0] == 'GO'):
-                app.doGo(keys[1])
+                app.doGo2(keys[1])
             elif (keys[0] == 'TURN'):
                 app.doTurn(keys[1])
             elif (keys[0] == 'NAV'):
-                app.doNav(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
+                app.doNav2(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
             else:    
             	app.sendKey(key)
         
