@@ -4,8 +4,12 @@ client.py runs on control end to communicate with server on beagle board.
 features:
 1. send movement messages through socket
    get feedback info
+   {'topic': 'coordinates',
+              'origin': (0, 0),
+              'destination': (1, 1)}
 2. send command for vedio streaming through socket from control device
    send vedio streaming to assigned destination
+
 """
 from __init__ import *
 import json
@@ -13,8 +17,9 @@ import socket
 
 def send_msg(msg_s):
    """
-   >>> msg = {'topic': 'instruction',
-              'instruction': '145 0 0 0'}
+   >>> msg = {'topic': 'coordinates',
+              'origin': (0, 0),
+              'destination': (1, 1)}
    >>> msg_s = json.dumps(msg)
    >>> send_msg(msg_s)
    200
@@ -32,7 +37,8 @@ def send_msg(msg_s):
    return recv
 
 if __name__ == '__main__':
-    msg = {'topic': 'instruction',
-       'instruction': '145 0 0 0'}
+    msg = {'topic': 'coordinates',
+           'origin': (0, 0),
+           'destination': (1, 1)}
     msg_s = json.dumps(msg)
     send_msg(msg_s)
