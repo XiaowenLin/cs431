@@ -30,6 +30,7 @@ from scipy.spatial import Delaunay
 from scipy.spatial.qhull import QhullError
 import cv2
 from generic_camera import GenericCamera
+from pi_camera import ThePiCamera
 import time
 
 class ObstacleAvoiderThread(Thread):
@@ -45,7 +46,7 @@ class ObstacleAvoiderThread(Thread):
         Thread.__init__(self)
 
         # Initialize camera
-        self.camera = GenericCamera()
+        self.camera = ThePiCamera()
 
         # Parameters for Shi-Tomasi corner detection
         self.feature_params = dict( maxCorners = 100,
@@ -239,7 +240,7 @@ class ObstacleAvoiderThread(Thread):
                                 old_point - old_neighborhood, axis=1))
                             local_scale = (sum1 - sum2) / sum2
 
-                            if (2*new_point[1]) >= np.shape(frame_gray)[1]:
+                            if (2*new_point[0]) < np.shape(frame_gray)[0]:
                                 self.left_scales[num_left_scales] = local_scale
                                 num_left_scales += 1
                             else:
