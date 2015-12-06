@@ -1,6 +1,6 @@
 import sys
+import socket
 from frame_client import FrameClient
-from socket_util import SocketUtil
 import cv2
 import numpy as np
 
@@ -10,8 +10,12 @@ def main(argv):
 
     cli = FrameClient(argv[1])
     while True:
-        cv2.imshow('Remote Image Viewer', \
-            SocketUtil.get_image_from_raw_buffer(cli.get_frame()))
+        try:
+            img = cli.get_frame()
+        except socket.error:
+            break
+        if img is not None:
+            cv2.imshow('Remote Image Viewer', img)
         # We MUST call waitKey() for an image window to appear
         k = cv2.waitKey(1) & 0xff
         if k == 27: # Was escape pressed?

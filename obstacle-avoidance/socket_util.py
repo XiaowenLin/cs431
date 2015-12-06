@@ -1,6 +1,4 @@
 import struct
-import numpy as np
-import cv2
 
 class SocketUtil:
     @staticmethod
@@ -27,12 +25,3 @@ class SocketUtil:
                 return None
             data += packet
         return data
-
-    @staticmethod
-    def get_raw_image_buffer(np_image):
-        _, buf = cv2.imencode('.jpg', np_image)
-        return buf.astype(np.uint8).tostring()
-
-    @staticmethod
-    def get_image_from_raw_buffer(buf):
-        return cv2.imdecode(np.fromstring(buf, dtype=np.uint8), 1)

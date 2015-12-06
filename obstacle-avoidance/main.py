@@ -1,13 +1,12 @@
 import sys
 from obstacle_avoider import ObstacleAvoider
 from frame_server import FrameServer
-from socket_util import SocketUtil
 import threading
 import time
 
 def imgdisp(cv2, img):
 #    cv2.imshow('frame', img)
-    frame_server.set_frame(SocketUtil.get_raw_image_buffer(img))
+    frame_server.set_frame(img)
 
 def min_ttc(the_min_ttc):
     print("\033[A\033[K\033[A\033[KMin TTC: %g"%(the_min_ttc))
