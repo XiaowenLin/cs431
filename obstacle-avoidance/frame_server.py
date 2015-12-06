@@ -70,7 +70,6 @@ class FrameServer:
         Service function for accepting incoming client connections. A session
         thread is allocated for each connection. This function should not be
         used directly outside this class.
-        function 
         """
         while True:
             conn, addr = self.s.accept()
