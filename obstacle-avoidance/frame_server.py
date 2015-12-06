@@ -15,14 +15,14 @@ class FrameServer:
         self.cv = Condition()
 
     def set_frame(self, the_frame):
-        _, buf = cv2.imencode('.jpg', the_frame)
-        frame_as_jpeg_bytes = buf.tostring()
-
-        self.cv.acquire()
-        self.frame_as_jpeg_bytes = frame_as_jpeg_bytes
-        self.seq_number += 1
-        self.cv.notifyAll()
-        self.cv.release()
+        ret_val, buf = cv2.imencode('.jpg', the_frame)
+        if ret_val:
+            frame_as_jpeg_bytes = buf.tostring()
+            self.cv.acquire()
+            self.frame_as_jpeg_bytes = frame_as_jpeg_bytes
+            self.seq_number += 1
+            self.cv.notifyAll()
+            self.cv.release()
 
     def handle_request(self, conn, addr):
         conn_closed = False
