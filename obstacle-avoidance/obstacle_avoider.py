@@ -22,6 +22,19 @@ __author__ = "Ron Wright"
 __copyright__ = "Copyright 2015 Ronald Joseph Wright"
 __maintainer__ = "Ron Wright"
 
+# Try to determine whether we are on Raspberry Pi.
+IS_RASPBERRY_PI = False
+try:
+    with open('/proc/cpuinfo', 'r') as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith('Hardware') and \
+               (line.endswith('BCM2708') or line.endswith('BCM2709')):
+                IS_RASPBERRY_PI = True
+                break
+except:
+    pass
+
 from optical_flow_drawer import OpticalFlowDrawer
 from median_filter import MedianFilter
 from threading import Thread
@@ -29,9 +42,18 @@ import numpy as np
 from scipy.spatial import Delaunay
 from scipy.spatial.qhull import QhullError
 import cv2
-from generic_camera import GenericCamera
-from pi_camera import ThePiCamera
 import time
+
+# If this script is running on the Raspberry Pi, use the CSI port.  Otherwise,
+# use standard operations.
+if IS_RASPBERRY_PI:
+    from pi_camera import ThePiCamera
+    class TheCamera(ThePiCamera):
+        pass
+else:
+    from generic_camera import GenericCamera
+    class TheCamera(GenericCamera):
+        pass
 
 class ObstacleAvoiderThread(Thread):
     """
@@ -46,7 +68,7 @@ class ObstacleAvoiderThread(Thread):
         Thread.__init__(self)
 
         # Initialize camera
-        self.camera = ThePiCamera()
+        self.camera = TheCamera()
 
         # Parameters for Shi-Tomasi corner detection
         self.feature_params = dict( maxCorners = 100,
