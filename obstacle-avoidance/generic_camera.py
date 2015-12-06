@@ -30,7 +30,13 @@ class GenericCameraIterator:
 
     def next(self):
         """
-        Retrieves the next frame and returns it.
+        Retrieves the next frame and returns it. (Python 2.x function)
+        """
+        return self.__next__()
+
+    def __next__(self):
+        """
+        Retrieves the next frame and returns it. (Python 3.x function)
         """
         _, frame = self.cap.read()
         return frame
