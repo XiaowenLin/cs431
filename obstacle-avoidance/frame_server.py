@@ -11,37 +11,41 @@ class FrameServer:
         self.s.bind(('', port))
         self.s.listen(backlog)
         self.frame_as_jpeg_bytes = None
+        self.seq_number = 0
         self.cv = Condition()
-    
+
     def set_frame(self, the_frame):
         _, buf = cv2.imencode('.jpg', the_frame)
         frame_as_jpeg_bytes = buf.tostring()
 
         self.cv.acquire()
         self.frame_as_jpeg_bytes = frame_as_jpeg_bytes
+        self.seq_number += 1
         self.cv.notifyAll()
         self.cv.release()
-    
+
     def handle_request(self, conn, addr):
         conn_closed = False
+        old_seq_number = None
         while not conn_closed:
             self.cv.acquire()
-            while self.frame_as_jpeg_bytes is None:
+            while old_seq_number == self.seq_number:
                 self.cv.wait()
+            frame_as_jpeg_bytes = self.frame_as_jpeg_bytes
+            old_seq_number = self.seq_number
+            self.cv.release()
             try:
-                SocketUtil.send_msg(conn, self.frame_as_jpeg_bytes)
+                SocketUtil.send_msg(conn, frame_as_jpeg_bytes)
             except socket.error:
                 conn_closed = True
-            self.frame_as_jpeg_bytes = None
-            self.cv.release()
-        
+
     def continuously_check_for_new_connections(self):
         while True:
             conn, addr = self.s.accept()
             t = threading.Thread(target=self.handle_request, args=(conn, addr))
             t.daemon = True
             t.start()
-    
+
     def run_daemon_thread(self):
         t = threading.Thread(target=self.continuously_check_for_new_connections)
         t.daemon = True
