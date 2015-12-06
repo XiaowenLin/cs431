@@ -23,11 +23,10 @@ __copyright__ = "Copyright 2015 Ronald Joseph Wright"
 __maintainer__ = "Ron Wright"
 
 from optical_flow_drawer import OpticalFlowDrawer
+from frame_worker import FrameWorker
 from median_filter import MedianFilter
 from threading import Thread
 import numpy as np
-from scipy.spatial import Delaunay
-from scipy.spatial.qhull import QhullError
 import cv2
 from cameras.auto_camera import AutoCamera
 import time
@@ -209,101 +208,21 @@ class ObstacleAvoiderThread(Thread):
             good_new = p1[st == 1]
             good_old = self.p0[st == 1]
 
-            # Find local scales consisting of computation of feature points and
-            # any other feature points in their Delaunay neighborhoods.  I'm
-            # hoping this is the right way to compute the local scales.  The
-            # numbers looked reasonable when I ran this.
-            num_localscales = 0
-            num_left_scales = 0
-            num_right_scales = 0
-            if len(good_old) >= 4:
-                try:
-                    old_triangles = Delaunay(good_old).simplices
-                    neighborhoods = ObstacleAvoiderThread.find_neighborhoods( \
-                        old_triangles)
-                    for (k, v) in list(neighborhoods.items()):
-                        index_arr = np.array(list(v))
+            # Start worker up
+            worker = FrameWorker(self, frame_gray, start, good_old, good_new)
+            worker.start()
 
-                        # target point
-                        new_point = good_new[k]
-                        old_point = good_old[k]
+            # Once we have results from the TTC computation, use them
+            worker.wait_on_ttc_computation()
+            start = worker.get_latest_ttc_update_time()
+            min_ttc, left_ttc, right_ttc = worker.get_ttc_values()
+            if min_ttc is not None:
+                self.min_ttc_cb(min_ttc)
+                self.balance_strategy_cb(left_ttc, right_ttc)
 
-                        # neighborhood points
-                        new_neighborhood = good_new[index_arr]
-                        old_neighborhood = good_old[index_arr]
-
-                        sum2 = np.sum(np.linalg.norm( \
-                            new_point - new_neighborhood, axis=1))
-                        if sum2 != 0:
-                            sum1 = np.sum(np.linalg.norm( \
-                                old_point - old_neighborhood, axis=1))
-                            local_scale = (sum1 - sum2) / sum2
-
-                            if (2*new_point[0]) < np.shape(frame_gray)[0]:
-                                self.left_scales[num_left_scales] = local_scale
-                                num_left_scales += 1
-                            else:
-                                self.right_scales[num_right_scales] = \
-                                    local_scale
-                                num_right_scales += 1
-
-                            self.local_scales[num_localscales] = local_scale
-                            num_localscales += 1
-                except (QhullError, ValueError):
-                    pass
-
-            # Draw the tracks
-            self.drawer.draw_tracks(good_old, good_new)
-
-            # Find max local scale on whole screen
-            threshold, max_scale, thresh_scales = \
-                ObstacleAvoiderThread.filter_local_scales( \
-                    self.local_scales, num_localscales)
-
-            if len(thresh_scales) == 0:
-                # We lost sufficient information at this point; reinitialize
-                # the obstacle avoider
-                self.old_gray = None
-            else:
-                # Find max local scale on left half of screen
-                _, left_max_scale, _ = \
-                    ObstacleAvoiderThread.filter_local_scales( \
-                        self.left_scales, num_left_scales, \
-                        threshold=threshold)
-
-                # Find max local scale on right half of screen
-                _, right_max_scale, _ = \
-                    ObstacleAvoiderThread.filter_local_scales( \
-                        self.right_scales, num_right_scales, \
-                        threshold=threshold)
-
-                # Find maximum in each set of thresholded local scales
-                self.scale_filter.set_filter_values( \
-                    (max_scale, left_max_scale, right_max_scale))
-                medians = self.scale_filter.update_filter()
-
-                if medians is not None:
-                    # Find median of each maximum local scale
-                    median_max_scale, left_median_max_scale, \
-                                      right_median_max_scale = medians
-
-                    # Find change in time, keeping in mind that we must
-                    # compensate for median filtering.
-                    end = time.time()
-                    delta = (end - start) / self.scale_filter.filter_size
-                    start = end
-
-                    self.min_ttc_cb(float('inf') if median_max_scale == 0 \
-                                    else delta / median_max_scale)
-                    left_ttc = float('inf') if left_median_max_scale == 0 \
-                               else delta / left_median_max_scale
-                    right_ttc = float('inf') if right_median_max_scale == 0 \
-                                else delta / right_median_max_scale
-                    self.balance_strategy_cb(left_ttc, right_ttc)
-
-            img = cv2.add(the_frame, self.drawer.get_current_mask())
-            self.drawer.update_frame_state()
-            self.imgdisp_cb(cv2, img)
+            # Once we have results from the render, use them
+            worker.wait_on_render()
+            self.imgdisp_cb(cv2, cv2.add(the_frame, worker.get_updated_mask()))
 
             k = cv2.waitKey(30) & 0xff
             if k == 27: # Was escape pressed?
