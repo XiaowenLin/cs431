@@ -266,8 +266,17 @@ class TetheredDriveApp():
     def doNav2(self, direction, x, y, x_set, y_set):
          x_offset =100 * ( x_set - x)
          y_offset =100 * (y_set - y)
+         if (x_offset <0 ):
+             x_dir = -1
+         else:
+             x_dir - 1
+         if (y_offset <0 ):
+             y_dir = -1
+         else:
+             y_dir - 1
+             
          if (y_offset):
-             angle =  90 - 180 / math.pi * math.atan(x_offset/y_offset)             
+             angle =   -180 / math.pi * math.atan(x_offset/y_offset) + 90 * x_dir             
          elif (x_offset <0 ):
              angle = -180
          else:
