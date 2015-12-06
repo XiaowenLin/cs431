@@ -30,7 +30,7 @@ from scipy.spatial import Delaunay
 from scipy.spatial.qhull import QhullError
 import cv2
 from generic_camera import GenericCamera
-#from pi_camera import ThePiCamera
+from pi_camera import ThePiCamera
 import time
 
 class ObstacleAvoiderThread(Thread):
@@ -46,7 +46,7 @@ class ObstacleAvoiderThread(Thread):
         Thread.__init__(self)
 
         # Initialize camera
-        self.camera = GenericCamera()
+        self.camera = ThePiCamera()
 
         # Parameters for Shi-Tomasi corner detection
         self.feature_params = dict( maxCorners = 100,
