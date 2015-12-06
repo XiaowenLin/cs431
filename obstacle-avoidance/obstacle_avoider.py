@@ -29,7 +29,7 @@ import numpy as np
 from scipy.spatial import Delaunay
 from scipy.spatial.qhull import QhullError
 import cv2
-from auto_camera import AutoCamera
+from cameras.auto_camera import AutoCamera
 import time
 
 class ObstacleAvoiderThread(Thread):
