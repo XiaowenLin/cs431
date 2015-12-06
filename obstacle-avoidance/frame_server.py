@@ -26,7 +26,7 @@ class FrameServer:
 
     def handle_request(self, conn, addr):
         conn_closed = False
-        old_seq_number = None
+        old_seq_number = 0
         while not conn_closed:
             self.cv.acquire()
             while old_seq_number == self.seq_number:
