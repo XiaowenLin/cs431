@@ -230,10 +230,10 @@ class TetheredDriveApp():
             angle += direction*read
             print  angle, ' ',set_angle, ' ', watchdog
             watchdog+=1
-            if read == 0:
-                cnt +=1
-            if cnt == 3:
-                watchdog = TIMEOUT
+            #if read == 0:
+            #    cnt +=1
+            #if cnt == 3:
+            #    watchdog = TIMEOUT
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
 
