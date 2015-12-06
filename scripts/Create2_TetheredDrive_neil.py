@@ -64,6 +64,7 @@ DANGLE = 90
 DANGLEMAX = 90
 BACK = 5
 AGG = 50
+ERR =50
 class Command():
 
     def __init__(self, name, value):
@@ -300,11 +301,12 @@ class TetheredDriveApp():
          remain =self.doGo2(distance)
          sum_angle =0
          navdog = 0 
-         while (remain >50 and navdog < ITERMAX ):
+         while (remain >ERR and navdog < ITERMAX ):
              navdog+= 1
              print 'Remaining distance', remain
              if (self.senseWALL()):
                  print "HIT A WALL"
+                 self.doSOUND()
                  return remain
              wall = self.senseBUMP();
 
@@ -351,28 +353,18 @@ class TetheredDriveApp():
          #    distance = (X**2 + Y**2) ** 0.5
              print 'New Distance', distance
              remain = self.doGo2 (distance)
-         self.doTurn(-sum_angle)    
+         self.doTurn(-sum_angle)
+         self.doSOUND()
          return remain       
          
-    def doNav(self, direction, x, y, x_set, y_set):
-         x_offset =100 * ( x_set - x)
-         y_offset =100 * (y_set - y)
-         if (y_offset):
-             angle = 180 / math.pi * math.atan(x_offset/y_offset)             
-         if (x_offset <0 ):
-             angle -= 180
-             
-         angle -= direction
-         
-         if (angle > 180):
-             angle = 360 -angle
-         elif angle < -180:
-             angle += 360
-             
-         distance  = (x_offset**2 + y_offset**2 )**0.5
-         print 'TURN ', angle, ', THEN GO ', distance
-         self.doTurn(angle)
-         self.doGo2(distance)
+  
+    def doSOUND(self):
+#        cmd = struct.pack(">BBBBB", 140,  0, 1, 60, 32)
+#        self.sendCommandRaw(cmd)
+
+        cmd = struct.pack(">BB", 141,  0)
+        self.sendCommandRaw(cmd)
+
 
     def sendDriveCommand(self, velocity, rotation): 
     	# compute left and right wheel velocities
@@ -485,6 +477,8 @@ class Main():
                 app.doNav2(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
             elif (keys[0] == 'BUMP'):
                 app.doSenseLoop()
+            elif (keys[0] == 'SOUND'):
+                app.doSOUND()
             
             else:    
             	app.sendKey(key)
