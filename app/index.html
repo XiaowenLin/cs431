@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+	<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Dashboard</title>
+	<!-- Bootstrap -->
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="assets/css/font-awesome.min.css">
+    <!-- Main Style -->
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/knobknob/knobknob.css" />
+</head>
+
+<body>
+
+<div class="wrapper">
+	<header>
+        <h2>Dashboard</h2>
+	</header>
+
+	<nav>
+<!-- 		<ul id="toggles">
+            <li id="speed" class="toggle">
+                <input checked type="checkbox" id="sc" value="None"/>
+                <label for="sc">Speed</label>
+            </li>
+            <li id="accel" class="toggle">
+                <input checked type="checkbox" id="ac" value="None"/>
+                <label for="ac">Acceleration</label>
+            </li>
+            <li id="power" class="toggle">
+                <input checked type="checkbox" id="pc" value="None"/>
+                <label for="pc">Power</label>
+            </li>
+            <li id="odometer" class="toggle">
+                <input checked type="checkbox" id="oc" value="None"/>
+                <label for="mc">Odometer</label>
+            </li>
+        </ul> -->
+        <ul id="menu">
+<!-- 			<li>
+                <input type="file" id="upload" value="None"/>
+            </li>
+ -->        </ul>
+
+        <ul id="switch">
+<!--             <li>
+                <i class="fa fa-exchange fa-2x"></i>
+            </li> -->
+        </ul>
+
+        <!-- <div id="odometerGauge" class="odometer">0 km</div> -->
+	</nav>
+
+    <section id="main">
+        <div id="bars">
+            <div id="control">
+                <!-- The knob markup will go here -->
+            </div>
+        </div>
+	</section>
+
+	<div class="push"></div>
+</div>
+
+<div id="loader"></div>
+
+<footer>
+    <div id="slider">
+        <p>-</p><input id="resolution" type="range" value="0"/><p>+</p>
+    </div>
+    <div id="controls">
+        <i id="slow" class="fa fa-arrow-left fa-3x"></i>
+        <i id="play" class="fa fa-play fa-3x"></i>
+        <i id="fast" class="fa fa-arrow-right fa-3x"></i>
+    </div>
+    <div id="count">
+        <h1>Speed: 1x</h1>
+    </div>
+</footer>
+
+<!-- jQuery -->
+<script src="assets/js/jquery-2.1.3.min.js"></script>
+<!-- Bootstrap JS -->
+<script src="assets/js/bootstrap.min.js"></script>
+<!-- Main JS -->
+<script src="assets/js/script.js"></script>
+
+<script src="assets/js/knobKnob/transform.js"></script>
+<script src="assets/js/knobknob/knobknob.jquery.js"></script>
+
+</body>
+</html>

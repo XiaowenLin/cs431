@@ -1,0 +1,305 @@
+* {
+	margin: 0;
+    -webkit-user-select: none;
+}
+
+html,
+body {
+	height: 100%;
+}
+
+h2 {
+    font-family: "RalewayDots";
+    margin: 0;
+    color: white;
+    padding-left: 20px;
+    font-size: 34px;
+    line-height: 70px;
+}
+
+body {
+    background-color: whitesmoke;
+    color: black;
+    overflow: hidden;
+}
+
+.wrapper {
+	min-height: 100%;
+	width: 100%;
+	margin: 0 auto -100px;
+}
+
+/* Top header and menu styling */
+
+header {
+	background-color: #36424a;
+	height: 70px;
+	width: 100%;
+}
+
+nav {
+	background-color: silver;
+	height: 80px;
+	width: 100%;
+}
+
+nav > ul {
+    height: 100%;
+    line-height: 80px;
+    float: left;
+    margin-bottom: 0;
+}
+
+nav > ul > li {
+	color: #36424a;
+    list-style: none;
+    text-align:center;
+    display: inline-block;
+    cursor: pointer;
+}
+
+/* Toggle button styling */
+
+.toggle {
+	margin-right: 20px;
+}
+
+.toggle > input[type="checkbox"] {
+	margin-right: 10px;
+}
+
+#main {
+    position: fixed;
+    width: 100%;
+    height: calc(100% - 250px);
+}
+
+/* Chart toggle styling */
+
+#lineChart {
+    width: 95%;
+    margin: 0 auto;
+}
+
+#speedGauge,
+#accelerationGauge,
+#powerGauge {
+	width: 31%;
+	margin-left: 1.7%;
+    float: left;
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+#switch {
+    line-height: 88px;
+    float: right;
+    margin-right: 2%;
+}
+
+/* Loading bar styling */
+
+#loader {
+    height: 4px;
+    width: 100%;
+    background-color: #56a856;
+}
+
+/* Footer styling */
+
+footer {
+	background-color: #36424a;
+	width: 100%;
+    opacity: 0.8;
+}
+
+/* Control (fast, slow) styling */
+
+footer > #controls {
+    width: 39%;
+    text-align:center;
+    display: inline-block;
+    line-height: 115px;
+}
+
+footer > #controls > i {
+    margin-right: 55px;
+}
+
+footer > #controls > i:hover {
+    cursor: pointer;
+}
+
+footer > #count {
+    width: 30%;
+    text-align: center;
+    display: inline-block;
+    font-family: "RalewayDots";
+    font-size: 30px;
+    color: white;
+}
+
+/* Slider resolution styling */
+
+footer > #slider {
+    width: 30%;
+    display: inline-block;
+    text-align: center;
+    line-height: 115px;
+    font-weight: bold;
+    vertical-align: middle;
+    margin-top: -10px;
+}
+
+#slider > #resolution {
+    display: inline-block;
+}
+
+#slider > p {
+    color: white;
+    padding-left: 5px;
+    padding-right: 5px;
+    display: inline-block;
+}
+
+#play {
+    color: lightgrey;
+}
+
+footer,
+.push {
+	height: 100px;
+}
+
+
+/* Range input styling */
+
+input[type="range"] {
+    background: black;
+    height: 6px;
+    width: 80%;
+    max-width: 400px;
+    outline: none;
+    border-style: none;
+    border-radius: 8px;
+    margin: 0 auto;
+    box-shadow: inset 0 0 1px 1px rgba(0, 0, 0, 0.9), 0 1px 1px 0 rgba(255, 255, 255, 0.13);
+}
+
+input[type="range"]:hover {
+    cursor: pointer;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    height: 19px;
+	width: 19px;
+    border-radius: 100px;
+    border: 1px solid #56a856;
+    background: #56a856;
+ }
+
+
+@font-face {
+  font-family: "RalewayDots";
+  src: url("../fonts/RalewayDots-Regular.ttf") format("truetype");
+}
+
+
+/* Checkbox input styling */
+
+input[type=checkbox] {
+	-webkit-appearance: none;
+	height: 14px;
+	width: 14px;
+ 	cursor: pointer;
+ 	border-radius: 20px;
+ 	background-color: white;
+}
+
+#sc:checked {
+	background-color: #ff7f50;
+}
+
+#ac:checked {
+    background-color: #87cefa;
+}
+
+#oc:checked {
+    background-color: #56a856;
+}
+
+#pc:checked {
+    background-color: #da70d6;
+}
+
+input[type=checkbox]:focus {
+	outline-color: transparent;
+	outline-style: none;
+}
+
+.odometer {
+    font-size: 25px;
+    margin-top: 18px;
+    margin-right: 20px;
+    width: 144px;
+    height: 45px;
+    text-align: center;
+    border-radius: 5px;
+    border: 5px solid black;
+    display: inline-block;
+    float: right;
+}
+
+/* File input styling */
+
+input[type=file] {
+    line-height: initial;
+}
+
+input[type=file]::-webkit-file-upload-button {
+	height: 25px;
+	width: 140px;
+ 	cursor: pointer;
+ 	border: none;
+ 	background-color: white;
+}
+
+
+/*----------------------------
+    Color Bars
+-----------------------------*/
+
+
+#bars{
+    height: 212px;
+    margin: 0 auto;
+    position: relative;
+    width: 228px;
+}
+
+#control{
+    width:90px;
+    height:90px;
+    position:absolute;
+    top:50%;
+    left:50%;
+    margin:-45px 0 0 -45px;
+}
+
+.colorBar{
+    width:20px;
+    height:8px;
+    position:absolute;
+    opacity:0;
+    -moz-transition:0.3s;
+    -webkit-transition:0.3s;
+    -o-transition:0.3s;
+    transition:0.3s;
+}
+
+.colorBar.active{
+    opacity:1;
+}
