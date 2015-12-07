@@ -30,6 +30,7 @@ import numpy as np
 import cv2
 from cameras.auto_camera import AutoCamera
 import time
+from math import ceil
 
 class ObstacleAvoiderThread(Thread):
     """
@@ -169,7 +170,8 @@ class ObstacleAvoiderThread(Thread):
 
         This function should not be used directly outside this class.
         """
-        start = None
+        filter_update_time = None
+        last_iter_time = None
         for frame in self.camera.get_iterator():
             the_frame = self.camera.get_frame(frame)
             self.drawer.set_frame(the_frame)
@@ -184,7 +186,7 @@ class ObstacleAvoiderThread(Thread):
                 self.drawer.reset()
 
                 # Move on to next frame capture
-                start = time.time()
+                filter_update_time = time.time()
                 self.scale_filter.reset_filter()
                 continue
 
@@ -209,12 +211,13 @@ class ObstacleAvoiderThread(Thread):
             good_old = self.p0[st == 1]
 
             # Start worker up
-            worker = FrameWorker(self, frame_gray, start, good_old, good_new)
+            worker = FrameWorker(self, frame_gray, filter_update_time, \
+                good_old, good_new)
             worker.start()
 
             # Once we have results from the TTC computation, use them
             worker.wait_on_ttc_computation()
-            start = worker.get_latest_ttc_update_time()
+            filter_update_time = worker.get_latest_ttc_update_time()
             min_ttc, left_ttc, right_ttc = worker.get_ttc_values()
             if min_ttc is not None:
                 self.min_ttc_cb(min_ttc)
@@ -224,7 +227,11 @@ class ObstacleAvoiderThread(Thread):
             worker.wait_on_render()
             self.imgdisp_cb(cv2, cv2.add(the_frame, worker.get_updated_mask()))
 
-            k = cv2.waitKey(30) & 0xff
+            iter_time = time.time()
+            if last_iter_time is not None and last_iter_time + 30 > iter_time:
+                k = cv2.waitKey(int(ceil(30 - (iter_time - last_iter_time))))
+            else:
+                k = cv2.waitKey(1) & 0xff
             if k == 27: # Was escape pressed?
                 break
 
@@ -232,6 +239,8 @@ class ObstacleAvoiderThread(Thread):
             if self.old_gray is not None:
                 self.old_gray = frame_gray.copy()
                 self.p0 = good_new.reshape(-1,1,2)
+
+            last_iter_time = iter_time
 
         cv2.destroyAllWindows()
         self.camera.destroy()
