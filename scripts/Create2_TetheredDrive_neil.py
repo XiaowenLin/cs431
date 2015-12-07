@@ -103,13 +103,13 @@ class TetheredDriveApp():
             if self.connection is not None:
                 self.connection.write(command)
             else:
-                print "Not connected."
+                logging.debug( "Not connected.")
         except serial.SerialException:
-            print "Lost connection"
+            logging.debug( "Lost connection")
             self.connection = None
 
-        print ' '.join([ str(ord(c)) for c in command ])
-        print '\n'
+        logging.debug( ' '.join([ str(ord(c)) for c in command ]) )
+        logging.debug( '\n')
 
     # getDecodedBytes returns a n-byte value decoded using a format string.
     # Whether it blocks is based on how the connection was set up.
@@ -118,11 +118,11 @@ class TetheredDriveApp():
         try:
             return struct.unpack(fmt, self.connection.read(n))[0]
         except serial.SerialException:
-            print 'Uh-oh', "Lost connection to the robot!"
+            logging.debug( 'Uh-oh', "Lost connection to the robot!")
             self.connection = None
             return None
         except struct.error:
-            print "Got unexpected data from serial port."
+            logging.debug( "Got unexpected data from serial port.")
             return None
 
     # get8Unsigned returns an 8-bit unsigned value.
@@ -155,12 +155,12 @@ class TetheredDriveApp():
     def senseBUMP (self):
         self.sendCommandASCII ('142 45') #sense wall
         wall = self.getDecodedBytes(1, ">B")
-        print "Wall : ", wall
+        logging.debug( "Wall : ", wall)
         return wall
     def senseWALL (self):
         self.sendCommandASCII ('142 8') #sense wall
         wall = self.getDecodedBytes(1, ">B")
-        print "Wall : ", wall
+        logging.debug( "Wall : ", wall)
         return wall
     def doGo2(self, num): 
         self.sendCommandASCII ('142 19') #sense distance
@@ -173,9 +173,9 @@ class TetheredDriveApp():
             direction =1
         else:
             direction =-1
-        print distance, ' ', watchdog
+        logging.debug( distance, ' ', watchdog)
         if (set_distance  > VEL_TH):
-            print 'high speed'
+            logging.debug( 'high speed')
             speed = direction *VEL_H
         else:
             speed = direction *VEL
@@ -191,7 +191,7 @@ class TetheredDriveApp():
             self.sendCommandRaw(cmd)
         
             if (direction==1 and self.senseBUMP()):
-                print '>>>>A Wall Ahead'
+                logging.debug( '>>>>A Wall Ahead')
                 cmd = struct.pack(">Bhh", 145, 0, 0)
                 self.sendCommandRaw(cmd)
                 return float(num) - distance
@@ -199,7 +199,7 @@ class TetheredDriveApp():
             self.sendCommandASCII ('142 19')
             read = self.getDecodedBytes(2, ">h")
             distance -= read*direction
-            print distance, ' ', direction*set_distance, ' ', watchdog
+            logging.debug( distance, ' ', direction*set_distance, ' ', watchdog)
             watchdog+=1            
             if read == 0:
                 cnt+=1
@@ -219,7 +219,7 @@ class TetheredDriveApp():
             direction =1
         else:
             direction =-1
-        print angle, ' ', set_angle, ' ', watchdog
+        logging.debug( angle, ' ', set_angle, ' ', watchdog)
         cmd = struct.pack(">Bhh", 145, direction*ROT, direction*(-1 * ROT))
         self.sendCommandRaw(cmd)
         while ((angle < direction*set_angle) and watchdog != TIMEOUT):
@@ -227,7 +227,7 @@ class TetheredDriveApp():
             self.sendCommandASCII ('142 20')
             read = 2.1 *self.getDecodedBytes(2, ">h")
             angle += direction*read
-            print  angle, ' ',set_angle, ' ', watchdog
+            logging.debug(  angle, ' ',set_angle, ' ', watchdog)
             watchdog+=1
             #if read == 0:
             #    cnt +=1
@@ -293,7 +293,7 @@ class TetheredDriveApp():
              angle += 360
              
          distance  = (x_offset**2 + y_offset**2 )**0.5
-         print 'TURN ', angle, ', THEN GO ', distance
+         logging.debug( 'TURN ', angle, ', THEN GO ', distance)
          self.doTurn(angle)
          
          remain =self.doGo2(distance)
@@ -301,9 +301,9 @@ class TetheredDriveApp():
          navdog = 0 
          while (remain >ERR and navdog < ITERMAX ):
              navdog+= 1
-             print 'Remaining distance', remain
+             logging.debug( 'Remaining distance', remain)
              if (self.senseWALL()):
-                 print "HIT A WALL"
+                 logging.debug( "HIT A WALL")
                  self.doSOUND()
                  return remain
              wall = self.senseBUMP();
@@ -328,7 +328,7 @@ class TetheredDriveApp():
 
              wall = self.senseBUMP();
              if (wall ): #still wall ahead, keep turning
-                 print "Keep turning ..."
+                 logging.debug( "Keep turning ...")
                  break
                 
              detour =  DETOUR - self.doGo2 (DETOUR)
@@ -340,7 +340,7 @@ class TetheredDriveApp():
              
              #angle =  (myangle/DANGLE)*180 * math.atan (detour/remain) /math.pi  + myangle
              angle =  -(myangle/DANGLE) * (180 - 180 / math.pi * math.atan(remain/detour))
-             print 'New angle', angle
+             logging.debug( 'New angle', angle)
              if (angle > 180):
                  angle = 360 -angle
              elif angle < -180:
@@ -349,7 +349,7 @@ class TetheredDriveApp():
              sum_angle += angle   
              distance  = (remain**2 + 50**2 )**0.5
          #    distance = (X**2 + Y**2) ** 0.5
-             print 'New Distance', distance
+             logging.debug( 'New Distance', distance)
              remain = self.doGo2 (distance)
          self.doTurn(-sum_angle)
          self.doSOUND()
@@ -375,22 +375,22 @@ class TetheredDriveApp():
 
     def doConnectFromServer(self, port='/dev/ttyUSB0'):
         if self.connection is not None:
-            print 'Oops', "You're already connected!"
+            logging.debug( "Oops, You're already connected!")
             return 0
             
         try:
 	    self.connection = serial.Serial(port, baudrate=115200, timeout=1)
-            print 'Connected', "Connection succeeded!"
+            logging.debug( "Connected, Connection succeeded!")
             return 0
         except:
-            print 'Failed', "Sorry, couldn't connect to " + str(port)
+            logging.debug( "Failed, Sorry, couldn't connect to " + str(port) )
             return -1
             
         
     def doConnect(self):
  
         if self.connection is not None:
-            print 'Oops', "You're already connected!"
+            logging.debug( "Oops, You're already connected!")
             return
 
         try:
@@ -401,30 +401,30 @@ class TetheredDriveApp():
             port = raw_input('Enter COM port to open: ')
 
         if port is not None:
-            print "Trying " + str(port) + "... "
+            logging.debug( "Trying " + str(port) + "... " )
             try:
                 self.connection = serial.Serial(port, baudrate=115200, timeout=1)
-                print 'Connected', "Connection succeeded!"
+            logging.debug( "Connected, Connection succeeded!")
             except:
-                print 'Failed', "Sorry, couldn't connect to " + str(port)
+            logging.debug( "Failed, Sorry, couldn't connect to " + str(port) )
 
 
     def getHelp(self):
-        print '\nHelp \n'
-        print 'Operation Commands: \n'
+        logging.debug( '\nHelp \n')
+        logging.debug( 'Operation Commands: \n')
         for key, value in self.commands.iteritems():
-            print key + " \t " + value.getName()
-        print "\n"    
+            logging.debug( key + " \t " + value.getName())
+        logging.debug( "\n"    )
 
-        print 'Movement Commands: \n'
+        logging.debug( 'Movement Commands: \n')
         for key, value in self.motions.iteritems():
-            print key + " \t " + value.getName()
-        print "\n"
+            logging.debug( key + " \t " + value.getName())
+        logging.debug( "\n")
 
-        print 'Assist Commands: \n'
+        logging.debug( 'Assist Commands: \n')
         for key, value in self.assists.iteritems():
-            print key + " \t " + value.getName()
-        print "\n"    
+            logging.debug( key + " \t " + value.getName())
+        logging.debug( "\n"  )  
 
     def doQuit(self):
         if (raw_input('Are you sure you want to quit? ') == 'YES'):
