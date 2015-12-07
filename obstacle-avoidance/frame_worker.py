@@ -74,7 +74,7 @@ class FrameWorker:
         if len(thresh_scales) != 0:
             if threshold is None:
                 the_threshold = 0.1 * thresh_scales.max()
-            thresh_scales = thresh_scales[thresh_scales > the_threshold]
+            thresh_scales = thresh_scales[thresh_scales >= the_threshold]
         if len(thresh_scales) != 0:
             max_local_scale = np.max(thresh_scales)
         return the_threshold, max_local_scale, thresh_scales
