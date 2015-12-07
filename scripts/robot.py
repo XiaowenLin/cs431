@@ -1,10 +1,17 @@
 import json
-
+from Create2TetheredDrive_neil import TetheredDriveApp 
 
 class Robot:
     def __init__(self):
-        pass
+        self.app = TetheredDriveApp()
+        
 
     def navigate(self, origin, destination):
         print 'moving from %s to %s' % (str(origin), str(destination))
-        return json.dumps({'status': 200})
+        ret = self.app.doConnectFromServer()
+        if ret == -1:
+            return json.dumps({'status': 400})
+        self.app.sendKey('P')
+        self.app.sendKey('S')
+        remain = self.app.doNav2(0, origin[0], origin[1], destination[0], destination[1])    
+        return json.dumps({'status': 200, 'error': remain})

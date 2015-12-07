@@ -65,6 +65,8 @@ DANGLEMAX = 90
 BACK = 5
 AGG = 50
 ERR =50
+global connection
+
 class Command():
 
     def __init__(self, name, value):
@@ -109,7 +111,7 @@ class TetheredDriveApp():
             connection = None
 
         print ' '.join([ str(ord(c)) for c in command ])
-        print ' '.join([ str(ord(c)) for c in command ])
+            print ' '.join([ str(ord(c)) for c in command ])
         print '\n'
 
     # getDecodedBytes returns a n-byte value decoded using a format string.
@@ -374,10 +376,22 @@ class TetheredDriveApp():
         # create drive command
         cmd = struct.pack(">Bhh", 145, vr, vl)
         self.sendCommandRaw(cmd)
-    	
-    def doConnect(self):
-        global connection
 
+    def doConnectFromServer(self, port='/dev/ttyUSB0'):
+        try:
+            if connection is not None:
+            print 'Oops', "You're already connected!"
+            return 0
+            connection = serial.Serial(port, baudrate=115200, timeout=1)
+            print 'Connected', "Connection succeeded!"
+            return 0
+        except:
+            print 'Failed', "Sorry, couldn't connect to " + str(port)
+            return -1
+            
+        
+    def doConnect(self):
+ 
         if connection is not None:
             print 'Oops', "You're already connected!"
             return
