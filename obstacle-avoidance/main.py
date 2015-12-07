@@ -10,9 +10,11 @@ def imgdisp(cv2, img):
 
 def min_ttc(the_min_ttc):
     print("\033[A\033[K\033[A\033[KMin TTC: %g"%(the_min_ttc))
+    sys.stdout.flush()
 
 def balance_strategy(left_ttc, right_ttc):
     print("Left TTC: %g, Right TTC: %g"%(left_ttc, right_ttc))
+    sys.stdout.flush()
 
 def main(argv):
     global frame_server

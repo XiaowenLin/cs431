@@ -12,14 +12,13 @@ from median_filter import MedianFilter
 import numpy as np
 from scipy.spatial import Delaunay
 from scipy.spatial.qhull import QhullError
-import time
 
 class FrameWorker:
     """
     Class with worker routines that are used for the obstacle avoider.
     """
-    def __init__(self, the_thread, frame_gray, old_ttc_update_time, good_old, \
-        good_new):
+    def __init__(self, the_thread, frame_gray, last_iter_time, \
+        old_ttc_update_time, good_old, good_new):
         """
         Constructor for FrameWorker, where frame_gray is the grayscale image
         frame, old_ttc_update_time is the most recent TTC update time (in
@@ -29,6 +28,7 @@ class FrameWorker:
         """
         self.the_thread = the_thread
         self.frame_gray = frame_gray
+        self.last_iter_time = last_iter_time
         self.old_ttc_update_time = old_ttc_update_time
         self.new_ttc_update_time = self.old_ttc_update_time
         self.good_old = good_old
@@ -192,7 +192,7 @@ class FrameWorker:
 
                 # Find change in time, keeping in mind that we must
                 # compensate for median filtering.
-                self.new_ttc_update_time = time.time()
+                self.new_ttc_update_time = self.last_iter_time
                 delta = (self.new_ttc_update_time - self.old_ttc_update_time) \
                     / the_thread.scale_filter.filter_size
 

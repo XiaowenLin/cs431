@@ -171,8 +171,8 @@ class ObstacleAvoiderThread(Thread):
         This function should not be used directly outside this class.
         """
         filter_update_time = None
-        last_iter_time = None
         for frame in self.camera.get_iterator():
+            last_iter_time = time.time()
             the_frame = self.camera.get_frame(frame)
             self.drawer.set_frame(the_frame)
 
@@ -186,7 +186,7 @@ class ObstacleAvoiderThread(Thread):
                 self.drawer.reset()
 
                 # Move on to next frame capture
-                filter_update_time = time.time()
+                filter_update_time = last_iter_time
                 self.scale_filter.reset_filter()
                 continue
 
@@ -211,8 +211,8 @@ class ObstacleAvoiderThread(Thread):
             good_old = self.p0[st == 1]
 
             # Start worker up
-            worker = FrameWorker(self, frame_gray, filter_update_time, \
-                good_old, good_new)
+            worker = FrameWorker(self, frame_gray, last_iter_time, \
+                filter_update_time, good_old, good_new)
             worker.start()
 
             # Once we have results from the TTC computation, use them
@@ -223,10 +223,16 @@ class ObstacleAvoiderThread(Thread):
                 self.min_ttc_cb(min_ttc)
                 self.balance_strategy_cb(left_ttc, right_ttc)
 
+            # Now update the previous frame and previous points
+            if self.old_gray is not None:
+                self.old_gray = frame_gray.copy()
+                self.p0 = good_new.reshape(-1,1,2)
+
             # Once we have results from the render, use them
             worker.wait_on_render()
             self.imgdisp_cb(cv2, cv2.add(the_frame, worker.get_updated_mask()))
 
+            # Idle for whatever time we have left
             iter_time = time.time()
             if last_iter_time is not None and last_iter_time + 30 > iter_time:
                 k = cv2.waitKey(int(ceil(30 - (iter_time - last_iter_time))))
@@ -234,13 +240,6 @@ class ObstacleAvoiderThread(Thread):
                 k = cv2.waitKey(1) & 0xff
             if k == 27: # Was escape pressed?
                 break
-
-            # Now update the previous frame and previous points
-            if self.old_gray is not None:
-                self.old_gray = frame_gray.copy()
-                self.p0 = good_new.reshape(-1,1,2)
-
-            last_iter_time = iter_time
 
         cv2.destroyAllWindows()
         self.camera.destroy()
