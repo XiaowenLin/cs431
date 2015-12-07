@@ -45,7 +45,6 @@ try:
 except ImportError:
     raise
 
-connection = None
 
 VELOCITYCHANGE = 200
 ROTATIONCHANGE = 300
@@ -65,7 +64,6 @@ DANGLEMAX = 90
 BACK = 5
 AGG = 50
 ERR =50
-global connection
 
 class Command():
 
@@ -82,6 +80,7 @@ class Command():
 class TetheredDriveApp():
 
     def __init__(self):
+	self.connection = None
         self.motions = {'UP': Command('UP', -VELOCITYCHANGE), 'DW': Command('DOWN', VELOCITYCHANGE), 'RT': Command('RIGHT', -ROTATIONCHANGE), 'LT': Command('LEFT', ROTATIONCHANGE)}
         self.commands = {'P': Command('PASSIVE', '128'), 'S': Command('SAFE', '131'), 'F': Command('FULL', '132'), 'C': Command('CLEAN', '135'), 'D': Command('DOCK', '143'), 'R': Command('RESET', '7'), 'B': Command('BEEP', '140 3 1 64 16 141 3')}
         self.assists = {'PTS': Command('PORTS', lambda: self.getSerialPorts()), 'Q': Command('QUIT', lambda: self.doQuit()), 'H': Command('HELP', lambda: self.getHelp()), 'CT': Command('CONNECT', lambda: self.doConnect())}
@@ -99,31 +98,28 @@ class TetheredDriveApp():
 
     # sendCommandRaw takes a string interpreted as a byte array
     def sendCommandRaw(self, command):
-        global connection
 
         try:
-            if connection is not None:
-                connection.write(command)
+            if self.connection is not None:
+                self.connection.write(command)
             else:
                 print "Not connected."
         except serial.SerialException:
             print "Lost connection"
-            connection = None
+            self.connection = None
 
         print ' '.join([ str(ord(c)) for c in command ])
-            print ' '.join([ str(ord(c)) for c in command ])
         print '\n'
 
     # getDecodedBytes returns a n-byte value decoded using a format string.
     # Whether it blocks is based on how the connection was set up.
     def getDecodedBytes(self, n, fmt):
-        global connection
         
         try:
-            return struct.unpack(fmt, connection.read(n))[0]
+            return struct.unpack(fmt, self.connection.read(n))[0]
         except serial.SerialException:
             print 'Uh-oh', "Lost connection to the robot!"
-            connection = None
+            self.connection = None
             return None
         except struct.error:
             print "Got unexpected data from serial port."
@@ -378,11 +374,12 @@ class TetheredDriveApp():
         self.sendCommandRaw(cmd)
 
     def doConnectFromServer(self, port='/dev/ttyUSB0'):
-        try:
-            if connection is not None:
+        if self.connection is not None:
             print 'Oops', "You're already connected!"
             return 0
-            connection = serial.Serial(port, baudrate=115200, timeout=1)
+            
+        try:
+	    self.connection = serial.Serial(port, baudrate=115200, timeout=1)
             print 'Connected', "Connection succeeded!"
             return 0
         except:
@@ -392,7 +389,7 @@ class TetheredDriveApp():
         
     def doConnect(self):
  
-        if connection is not None:
+        if self.connection is not None:
             print 'Oops', "You're already connected!"
             return
 
@@ -406,7 +403,7 @@ class TetheredDriveApp():
         if port is not None:
             print "Trying " + str(port) + "... "
             try:
-                connection = serial.Serial(port, baudrate=115200, timeout=1)
+                self.connection = serial.Serial(port, baudrate=115200, timeout=1)
                 print 'Connected', "Connection succeeded!"
             except:
                 print 'Failed', "Sorry, couldn't connect to " + str(port)
@@ -431,7 +428,7 @@ class TetheredDriveApp():
 
     def doQuit(self):
         if (raw_input('Are you sure you want to quit? ') == 'YES'):
-            if connection:
+            if self.connection:
                 self.sendKey('P')
             quit()
 
