@@ -80,6 +80,7 @@ class Command():
 class TetheredDriveApp():
 
     def __init__(self):
+        self.stop = True
         self.connection = None
         self.motions = {'UP': Command('UP', -VELOCITYCHANGE), 'DW': Command('DOWN', VELOCITYCHANGE), 'RT': Command('RIGHT', -ROTATIONCHANGE), 'LT': Command('LEFT', ROTATIONCHANGE)}
         self.commands = {'P': Command('PASSIVE', '128'), 'S': Command('SAFE', '131'), 'F': Command('FULL', '132'), 'C': Command('CLEAN', '135'), 'D': Command('DOCK', '143'), 'R': Command('RESET', '7'), 'B': Command('BEEP', '140 3 1 64 16 141 3')}
@@ -181,7 +182,7 @@ class TetheredDriveApp():
             speed = direction *VEL
         cmd = struct.pack(">Bhh", 145, speed, speed)
         self.sendCommandRaw(cmd)
-        while (distance < (direction *set_distance) and watchdog != TIMEOUT):
+        while (distance < (direction *set_distance) and watchdog != TIMEOUT and not self.stop ):
             if (set_distance * direction - distance < VEL_TH):
                 if (speed*direction <= VEL):
                     speed = direction *VEL
@@ -222,7 +223,7 @@ class TetheredDriveApp():
         #print( angle, ' ', set_angle, ' ', watchdog)
         cmd = struct.pack(">Bhh", 145, direction*ROT, direction*(-1 * ROT))
         self.sendCommandRaw(cmd)
-        while ((angle < direction*set_angle) and watchdog != TIMEOUT):
+        while ((angle < direction*set_angle) and watchdog != TIMEOUT and not self.stop):
             time.sleep(TIME)
             self.sendCommandASCII ('142 20')
             read = 2.1 *self.getDecodedBytes(2, ">h")
@@ -281,7 +282,7 @@ class TetheredDriveApp():
          remain =self.doGo2(distance)
          sum_angle =0
          navdog = 0 
-         while (remain >ERR and navdog < ITERMAX ):
+         while (remain >ERR and navdog < ITERMAX  and not self.stop):
              navdog+= 1
              #print( 'Remaining distance', remain)
              if (self.senseWALL()):
@@ -367,6 +368,14 @@ class TetheredDriveApp():
             return -1
             
         
+    def doSTOP(self):
+		self.stop = True
+		time.sleep(TIME)
+		cmd = struct.pack(">Bhh", 145, 0, 0)
+		self.sendCommandRaw(cmd)
+		return 0
+
+
     def doConnect(self):
  
         if self.connection is not None:
