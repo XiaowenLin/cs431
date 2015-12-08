@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<style>
+  .thumb {
+    height: 75px;
+    border: 1px solid #000;
+    margin: 10px 5px 0 0;
+  }
+  
+
+</style>
+
+<style>
+  #progress_bar {
+    margin: 10px 0;
+    padding: 3px;
+    border: 1px solid #000;
+    font-size: 14px;
+    clear: both;
+    opacity: 0;
+    -moz-transition: opacity 1s linear;
+    -o-transition: opacity 1s linear;
+    -webkit-transition: opacity 1s linear;
+  }
+  #progress_bar.loading {
+    opacity: 1.0;
+  }
+  #progress_bar .percent {
+    background-color: #99ccff;
+    height: auto;
+    width: 0;
+  }
+</style>
+<script src="/socket.io/socket.io.js"></script>
+<script type="text/javascript">
+	function send()
+         {
+            if ("WebSocket" in window)
+            {
+               console.log("WebSocket is supported by your Browser!");
+               
+               // Let us open a web socket
+               var ws = new WebSocket("ws://localhost:12345");
+				
+               ws.onopen = function()
+               {
+                  // Web Socket is connected, send data using send()
+                  ws.send("Message to send");
+                  console.log("Message is sent...");
+               };
+				
+               ws.onmessage = function (evt) 
+               { 
+                  var received_msg = evt.data;
+                  console.log("Message is received...");
+               };
+				
+               ws.onclose = function()
+               { 
+                  // websocket is closed.
+                  console.log("Connection is closed..."); 
+               };
+            }
+            
+            else
+            {
+               // The browser doesn't support WebSocket
+               console.log("WebSocket NOT supported by your Browser!");
+            }
+         }
+</script>
+<head>
+<meta charset="utf-8">
+    <title>CS 431: Roomba, go, go, go</title>
+</head>
+	<body>
+
+
+        <form id="input_form">
+        <fieldset>
+        <legend>Command Parameters</legend>
+		 IP <input type="text" id="ip" value="10"><br><br>
+		 port <input type="text" id="port" value="10"><br><br>
+         origin <input type="text" id="origin" value="10"><br><br>
+		 destination <input type="text" id="destination" value="10"><br><br>
+        </fieldset>
+
+        </form>
+        <button onclick="send()">Send</button>
+
+	</body>
+</html>
