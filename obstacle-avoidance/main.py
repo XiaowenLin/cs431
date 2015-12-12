@@ -6,7 +6,7 @@ import time
 
 def imgdisp(cv2, img):
 #    cv2.imshow('frame', img)
-    frame_server.set_frame(img)
+    frame_server.push_frame(img)
 
 def min_ttc(the_min_ttc):
     print("\033[A\033[K\033[A\033[KMin TTC: %g"%(the_min_ttc))
