@@ -40,6 +40,7 @@ import struct
 import sys, glob # for listing serial ports
 import time
 import math
+from threading import Thread
 try:
     import serial
 except ImportError:
@@ -80,8 +81,8 @@ class Command():
 class TetheredDriveApp():
 
     def __init__(self):
-        self.stop = True
         self.connection = None
+        self.stop = False
         self.motions = {'UP': Command('UP', -VELOCITYCHANGE), 'DW': Command('DOWN', VELOCITYCHANGE), 'RT': Command('RIGHT', -ROTATIONCHANGE), 'LT': Command('LEFT', ROTATIONCHANGE)}
         self.commands = {'P': Command('PASSIVE', '128'), 'S': Command('SAFE', '131'), 'F': Command('FULL', '132'), 'C': Command('CLEAN', '135'), 'D': Command('DOCK', '143'), 'R': Command('RESET', '7'), 'B': Command('BEEP', '140 3 1 64 16 141 3')}
         self.assists = {'PTS': Command('PORTS', lambda: self.getSerialPorts()), 'Q': Command('QUIT', lambda: self.doQuit()), 'H': Command('HELP', lambda: self.getHelp()), 'CT': Command('CONNECT', lambda: self.doConnect())}
@@ -137,7 +138,7 @@ class TetheredDriveApp():
     # get16Unsigned returns a 16-bit unsigned value.
     def get16Unsigned(self):
         return self.getDecodedBytes(2, ">H")
-
+    
     # get16Signed returns a 16-bit signed value.
     def get16Signed(self):
         return self.getDecodedBytes(2, ">h")
@@ -182,7 +183,7 @@ class TetheredDriveApp():
             speed = direction *VEL
         cmd = struct.pack(">Bhh", 145, speed, speed)
         self.sendCommandRaw(cmd)
-        while (distance < (direction *set_distance) and watchdog != TIMEOUT and not self.stop ):
+        while (distance < (direction *set_distance) and watchdog != TIMEOUT and not self.stop):
             if (set_distance * direction - distance < VEL_TH):
                 if (speed*direction <= VEL):
                     speed = direction *VEL
@@ -209,6 +210,30 @@ class TetheredDriveApp():
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)
         return 0
+    def doLEFT(self):
+        cmd = struct.pack(">Bhh", 145, ROT, (-1 * ROT))
+        self.sendCommandRaw(cmd)
+        time.sleep(TIME)
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+    def doRIGHT(self):
+        cmd = struct.pack(">Bhh", 145, -1 *ROT, (1 * ROT))
+        self.sendCommandRaw(cmd)
+        time.sleep(TIME)
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+    def doUP(self):
+        cmd = struct.pack(">Bhh", 145, ROT, (-1 * ROT))
+        self.sendCommandRaw(cmd)
+        time.sleep(TIME)
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+    def doSTOP(self):
+        self.stop = True
+        time.sleep(TIME)
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+
     def doTurn(self, num):
         self.sendCommandASCII ('142 20') #sense angle
         angle = self.getDecodedBytes(2, ">h")
@@ -248,7 +273,7 @@ class TetheredDriveApp():
     def doNav2(self, direction, x, y, x_set, y_set):
          x_offset =100 * ( x_set - x)
          y_offset =100 * (y_set - y)
-
+         self.stop = False
          if (x_offset <0 ):
              x_dir = -1
          else:
@@ -282,13 +307,13 @@ class TetheredDriveApp():
          remain =self.doGo2(distance)
          sum_angle =0
          navdog = 0 
-         while (remain >ERR and navdog < ITERMAX  and not self.stop):
+         while (remain >ERR and navdog < ITERMAX and not self.stop):
              navdog+= 1
              #print( 'Remaining distance', remain)
-             if (self.senseWALL()):
-                 print( "HIT A WALL")
-                 self.doSOUND()
-                 return remain
+             #if (self.senseWALL()):
+             #    print( "HIT A WALL")
+             #    self.doSOUND()
+             #    return remain
              wall = self.senseBUMP();
 
              if (wall):
@@ -368,14 +393,6 @@ class TetheredDriveApp():
             return -1
             
         
-    def doSTOP(self):
-		self.stop = True
-		time.sleep(TIME)
-		cmd = struct.pack(">Bhh", 145, 0, 0)
-		self.sendCommandRaw(cmd)
-		return 0
-
-
     def doConnect(self):
  
         if self.connection is not None:
@@ -474,7 +491,13 @@ class Main():
             elif (keys[0] == 'TURN'):
                 app.doTurn(keys[1])
             elif (keys[0] == 'NAV'):
-                app.doNav2(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
+                #app.doNav2(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
+                p = Thread(target=app.doNav2, args=[float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5])])
+                p.start()
+            elif (keys[0] == 'S'):
+                q = Thread(target=app.doSTOP)
+                q.start()
+                q.join()
             elif (keys[0] == 'BUMP'):
                 app.doSenseLoop()
             elif (keys[0] == 'SOUND'):
