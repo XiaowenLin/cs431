@@ -14,11 +14,11 @@ class FrameClient:
     """
     Class for receiving frames from a frame server
     """
-    def __init__(self, host, port=12345):
+    def __init__(self, host, port=11111):
         """
         Constructor for FrameClient, where host is the hostname or IP address
         of the frame server, and the optional parameter port (with default
-        value 12345) is the port number of the frame server.
+        value 11111) is the port number of the frame server.
         """
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((host, port))

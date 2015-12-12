@@ -17,10 +17,10 @@ class FrameServer:
     """
     Class for sending image frames to clients in real time
     """
-    def __init__(self, port=12345, backlog=5):
+    def __init__(self, port=11111, backlog=5):
         """
         Constructor for FrameServer, where the optional parameter port (with
-        default value 12345) is the port number to use for the frame server,
+        default value 11111) is the port number to use for the frame server,
         and the optional parameter backlog (with default value 5) is the
         maximum number of incoming client connections that can wait between
         successive accept calls.
