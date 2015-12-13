@@ -274,8 +274,7 @@ class TetheredDriveApp():
     def doNav2(self, direction, x, y, x_set, y_set):
          x_offset =100 * ( x_set - x)
          y_offset =100 * (y_set - y)
-         self.stop = False
-         self.stopstop = False
+     
          if (x_offset <0 ):
              x_dir = -1
          else:
