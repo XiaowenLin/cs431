@@ -50,13 +50,29 @@ def recvall(sock, n):
 def float_to_bytes(value):
     """
     Converts the given float value into bytes consisting of a 32-byte integer
-    and a 32-bit fraction (both in network byte, or big endian, order).
+    and a 32-bit fraction (both in network byte, or big endian, order). The
+    first byte is 0x01 if the value is infinite and 0x00 if the value is
+    finite.
+
+    If the given value is finite, it will return the following:
+
+        +---+----------------+-----------------+
+        | 0 | 32-bit integer | 32-bit fraction |
+        +---+----------------+-----------------+
+
+    If the given value is infinite, it will return the following:
+
+        +---+----------------------------------+
+        | 1 |    64 bits (8-bytes) of zeros    |
+        +---+----------------------------------+
+
     """
     if isinf(value):
-        return 'INF' # Return 'INF' if value is infinity
+        return '\1' + 8*'\0'
     integer_part = int(value)
     fractional_part = int((value - integer_part) * 4294967296.0)
-    return struct.pack('>I', integer_part) + struct.pack('>I', fractional_part)
+    return '\0' + struct.pack('>I', integer_part) \
+                + struct.pack('>I', fractional_part)
 
 def bytes_to_float(the_bytes):
     """
@@ -64,10 +80,11 @@ def bytes_to_float(the_bytes):
     and a 32-bit fraction) into a float value. This function is essentially the
     inverse of float_to_bytes.
     """
-    if len(the_bytes) == 8:
-        integer_part = struct.unpack('>I', the_bytes[:4])[0]
-        fractional_part = struct.unpack('>I', the_bytes[4:])[0]
-        return integer_part + (fractional_part / 4294967296.0)
-    if the_bytes == 'INF':
+    if len(the_bytes) == 9:
+        is_infinite_byte = the_bytes[0]
+        if is_infinite_byte == '\0':
+            integer_part = struct.unpack('>I', the_bytes[1:5])[0]
+            fractional_part = struct.unpack('>I', the_bytes[5:])[0]
+            return integer_part + (fractional_part / 4294967296.0)
         return float('inf')
     return None
