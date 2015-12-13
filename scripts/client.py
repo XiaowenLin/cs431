@@ -21,7 +21,7 @@ class Commander:
         self.s = socket.socket()
         self.s.connect((TCP_HOST, TCP_PORT))
 
-    def send_msg(msg_s):
+    def send_msg(self, msg_s):
        """
        >>> msg = {'topic': 'coordinates',
                   'origin': (0, 0),
