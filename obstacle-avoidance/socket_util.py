@@ -45,3 +45,24 @@ def recvall(sock, n):
             return None
         data += packet
     return data
+
+def float_to_bytes(value):
+    """
+    Converts the given float value into bytes consisting of a 32-byte integer
+    and a 32-bit fraction (both in network byte, or big endian, order).
+    """
+    integer_part = int(value)
+    fractional_part = int((value - integer_part) * 4294967296.0)
+    return struct.pack('>I', integer_part) + struct.pack('>I', fractional_part)
+
+def bytes_to_float(the_bytes):
+    """
+    Converts the string of bytes given by the_bytes (with a 32-byte integer
+    and a 32-bit fraction) into a float value. This function is essentially the
+    inverse of float_to_bytes.
+    """
+    if len(the_bytes) == 8:
+        integer_part = struct.unpack('>I', the_bytes[:4])[0]
+        fractional_part = struct.unpack('>I', the_bytes[4:])[0]
+        return integer_part + (fractional_part / 4294967296.0)
+    return None

@@ -1,6 +1,7 @@
 import sys
 from obstacle_avoider import ObstacleAvoider
 from frame_server import FrameServer
+from ttc_server import TTCServer
 import threading
 import time
 
@@ -9,16 +10,20 @@ def imgdisp(cv2, img):
     frame_server.push_frame(img)
 
 def min_ttc(the_min_ttc):
+    global glob_min_ttc
     print("\033[A\033[K\033[A\033[KMin TTC: %g"%(the_min_ttc))
     sys.stdout.flush()
+    glob_min_ttc = the_min_ttc
 
 def balance_strategy(left_ttc, right_ttc):
     print("Left TTC: %g, Right TTC: %g"%(left_ttc, right_ttc))
     sys.stdout.flush()
+    ttc_server.push_ttc_values(glob_min_ttc, left_ttc, right_ttc)
 
 def main(argv):
-    global frame_server
+    global frame_server, ttc_server
     frame_server = FrameServer()
+    ttc_server = TTCServer()
     frame_server.run_daemon_thread()
     avoider = ObstacleAvoider()
     avoider.set_imgdisp_cb(imgdisp)
