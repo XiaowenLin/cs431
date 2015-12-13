@@ -29,7 +29,7 @@ class FrameClient:
         representation understandable by OpenCV, which is returned by the
         function. In the case of an error, None is returned.
         """
-        message = socket_util.recv_msg(self.s)
+        message = socket_util.recv_msg_as_base64(self.s)
         if message is None:
             return None
         return cv2.imdecode(np.fromstring(message, dtype=np.uint8), 1)
