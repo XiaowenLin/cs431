@@ -6,6 +6,12 @@ features:
    send feedback info to control device
 2. receive command for vedio streaming through socket from control device
    send vedio streaming to assigned destination
+
+json string to control:
+{'topic': 'coordinates', 'origin': [0, 0], 'destination': [1, 1]}
+{'topic': 'angle', 'turn': 90.0}
+{'topic': 'stop'}
+{'topic': 'forward'}
 """
 import json
 from __init__ import *
@@ -23,7 +29,10 @@ class Server:
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)         # Create a socket object
         self.s.bind((TCP_HOST, TCP_PORT))                                  # Bind to the port
         self.s.listen(backlog)                                             # Now wait for client connection.
-        self.actions = {'coordinates': self._move_robot}
+        self.actions = {'coordinates': self._move_robot,                   # Add new actions here
+                        'angle': self._turn_robot,
+                        'stop': self._stop_robot,
+                        'forward': self._forward_robot}
         self.roomba = Robot()
 
 
@@ -42,7 +51,7 @@ class Server:
         if not data:
             conn.send(Server.fail_msg_s)  # echo
             return
-        logging.debug("received data: %s", data)
+        logging.debug('received data: %s', data)
         data = json.loads(data)
         status_s = self._execute(data)
         conn.send(status_s)  # echo
@@ -58,9 +67,30 @@ class Server:
             logging.debug("Bad data with missing keys.")
             return json.dumps({'status': 400})
 
+    def _turn_robot(self, data):
+        """
+        turn the robot only
+        :param data: float
+        :return: serilized json
+        """
+        return self.roomba.turn(data.get('turn'))
+
+    def _stop_robot(self, data):
+        """
+        stop robot
+        :param data:
+        :return:
+        """
+        return self.roomba.stop()
+
+    def _forward_robot(self, data):
+        return self.roomba.forward()
+
 if __name__ == '__main__':
     server = Server()
     while True:
+        logging.debug('listening')
         conn, addr = server.s.accept()
         server.handle_request(conn, addr)
+        logging.debug('returned from handle_request')
 
