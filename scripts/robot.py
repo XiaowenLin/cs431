@@ -4,7 +4,6 @@ from Create2_TetheredDrive_neil import *
 class Robot:
     def __init__(self):
         self.app = TetheredDriveApp()
-        
 
     def navigate(self, origin, destination):
         print 'moving from %s to %s' % (str(origin), str(destination))
@@ -16,11 +15,17 @@ class Robot:
         remain = self.app.doNav2(0, origin[0], origin[1], destination[0], destination[1])    
         return json.dumps({'status': 200, 'error': remain})
 
-    def forward (self):
+    def forward(self):
         self.app.doUP()
+        return json.dumps({'status': 200})
 
-    def turn (self, angle):
-        self.app.doTurn(angle)
+    def turn(self, angle):
+        ret = self.app.doTurn(angle)
+        if ret == 0:
+            return json.dumps({'status': 200})
+        else:
+            return json.dumps({'status': 400})
 
-    def stop (self):
+    def stop(self):
         self.app.doSTOP()
+        return json.dumps({'status': 200})
