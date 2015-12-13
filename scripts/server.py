@@ -67,7 +67,7 @@ class Server:
         logging.debug('received data: %s', data)
         data = json.loads(data)
         Server.roomba_lock.acquire()
-        self.roomba.stop()
+        #self.roomba.stop()
         Server.roomba_lock.release()
         status_s = self._execute(data)
         conn.send(status_s)  # echo
@@ -107,5 +107,7 @@ if __name__ == '__main__':
     while True:
         logging.debug('listening')
         conn, addr = server.s.accept()
+        self.roomba.stop()
+        self.roomba.app.stop = False
         t = threading.Thread(target=server.handle_request, args=(conn, addr))
         t.start()
