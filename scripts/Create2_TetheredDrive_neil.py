@@ -233,7 +233,7 @@ class TetheredDriveApp():
         time.sleep(TIME*5)
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)
-        self.stop = False
+        #self.stop = False
         
     def doTurn(self, num):
         self.sendCommandASCII ('142 20') #sense angle
@@ -275,6 +275,7 @@ class TetheredDriveApp():
          x_offset =100 * ( x_set - x)
          y_offset =100 * (y_set - y)
          self.stop = False
+         self.stopstop = False
          if (x_offset <0 ):
              x_dir = -1
          else:
@@ -307,7 +308,8 @@ class TetheredDriveApp():
          
          remain =self.doGo2(distance)
          sum_angle =0
-         navdog = 0 
+         navdog = 0
+         
          while (remain >ERR and navdog < ITERMAX and not self.stop):
              navdog+= 1
              #print( 'Remaining distance', remain)
