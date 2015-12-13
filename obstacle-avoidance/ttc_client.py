@@ -33,3 +33,9 @@ class TTCClient:
                    socket.bytes_to_float(message[8:16]), \
                    socket.bytes_to_float(message[16:])
         return None
+
+    def shutdown(self):
+        """
+        Shuts down the TTC client.
+        """
+        self.s.shutdown(socket.SHUT_RDWR)

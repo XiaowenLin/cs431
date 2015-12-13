@@ -33,3 +33,9 @@ class FrameClient:
         if message is None:
             return None
         return cv2.imdecode(np.fromstring(message, dtype=np.uint8), 1)
+
+    def shutdown(self):
+        """
+        Shuts down the frame client.
+        """
+        self.s.shutdown(socket.SHUT_RDWR)
