@@ -27,7 +27,7 @@ def send_msg(sock, msg):
     msg = struct.pack('>I', len(msg)) + msg
     sock.sendall(msg)
 
-def recv_msg_as_base64(sock, msg):
+def recv_msg_as_base64(sock):
     """
     Receives a message encoded in base-64, decodes it, and returns the result.
     """
