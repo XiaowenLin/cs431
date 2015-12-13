@@ -97,7 +97,7 @@ class Server:
         :param data:
         :return:
         """
-        pass
+        return json.dumps({'status': 200})
 
     def _forward_robot(self, data):
         return self.roomba.forward()
