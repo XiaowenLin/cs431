@@ -57,7 +57,7 @@ VEL_H = 200
 VEL_TH = 200
 ROT = 30
 
-ITERMAX = 6
+ITERMAX = 3
 DETOUR = 50
 DETOURMAX = 50
 DANGLE = 90
@@ -313,10 +313,10 @@ class TetheredDriveApp():
          while (remain >ERR and navdog < ITERMAX and not self.stop):
              navdog+= 1
              #print( 'Remaining distance', remain)
-             #if (self.senseWALL()):
-             #    print( "HIT A WALL")
-             #    self.doSOUND()
-             #    return remain
+             if (self.senseWALL()):
+                 print( "HIT A WALL")
+                 self.doSOUND()
+                 return remain
              wall = self.senseBUMP();
 
              if (wall):
