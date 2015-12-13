@@ -66,9 +66,9 @@ class Server:
             return
         logging.debug('received data: %s', data)
         data = json.loads(data)
-        Server.roomba_lock.acquire()
+        #Server.roomba_lock.acquire()
         #self.roomba.stop()
-        Server.roomba_lock.release()
+        #Server.roomba_lock.release()
         status_s = self._execute(data)
         conn.send(status_s)  # echo
         conn.close()
@@ -102,12 +102,18 @@ class Server:
     def _forward_robot(self, data):
         return self.roomba.forward()
 
+    def dummy(self):
+        return 0
 if __name__ == '__main__':
     server = Server()
+    t= threading.Thread(target=server.dummy)
+    t.start()
     while True:
         logging.debug('listening')
         conn, addr = server.s.accept()
         server.roomba.stop()
+        t.join()
+        logging.debug('previous thread finished')
         server.roomba.app.stop = False
         t = threading.Thread(target=server.handle_request, args=(conn, addr))
         t.start()
