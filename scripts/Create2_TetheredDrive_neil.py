@@ -230,10 +230,11 @@ class TetheredDriveApp():
         self.sendCommandRaw(cmd)    
     def doSTOP(self):
         self.stop = True
-        time.sleep(TIME)
+        time.sleep(TIME*5)
         cmd = struct.pack(">Bhh", 145, 0, 0)
-        self.sendCommandRaw(cmd)    
-
+        self.sendCommandRaw(cmd)
+        self.stop = False
+        
     def doTurn(self, num):
         self.sendCommandASCII ('142 20') #sense angle
         angle = self.getDecodedBytes(2, ">h")
