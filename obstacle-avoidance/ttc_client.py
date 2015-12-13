@@ -29,9 +29,9 @@ class TTCClient:
         message = socket_util.recv_msg(self.s)
         if message is not None or len(message) == 8*3:
             # return (min_ttc, left_ttc, right_ttc)
-            return socket.bytes_to_float(message[:8]), \
-                   socket.bytes_to_float(message[8:16]), \
-                   socket.bytes_to_float(message[16:])
+            return socket_util.bytes_to_float(message[:8]), \
+                   socket_util.bytes_to_float(message[8:16]), \
+                   socket_util.bytes_to_float(message[16:])
         return None
 
     def shutdown(self):
