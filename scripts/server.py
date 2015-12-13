@@ -107,7 +107,7 @@ if __name__ == '__main__':
     while True:
         logging.debug('listening')
         conn, addr = server.s.accept()
-        self.roomba.stop()
-        self.roomba.app.stop = False
+        server.roomba.stop()
+        server.roomba.app.stop = False
         t = threading.Thread(target=server.handle_request, args=(conn, addr))
         t.start()
