@@ -34,4 +34,5 @@ class Robot:
         self.app.sendKey('P')
         self.app.sendKey('S')
         self.app.doSTOP()
+        logging.debug('stopped')
         return json.dumps({'status': 200})
