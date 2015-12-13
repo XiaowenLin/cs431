@@ -17,7 +17,7 @@ def send_msg_as_base64(sock, msg):
     Encodes the message into base-64 and sends the encoded message using the
     socket sock.
     """
-    sock.sendall(b64encode(msg) + '\0')
+    sock.sendall(b64encode(msg) + '\n')
 
 def send_msg(sock, msg):
     """
@@ -36,7 +36,7 @@ def recv_msg_as_base64(sock):
         byte = sock.recv(1)
         if not byte:
             break
-        if byte == '\0':
+        if byte == '\n':
             return b64decode(data)
         data += byte
     return None
