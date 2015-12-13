@@ -223,7 +223,7 @@ class TetheredDriveApp():
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
     def doUP(self):
-        cmd = struct.pack(">Bhh", 145, ROT, (-1 * ROT))
+        cmd = struct.pack(">Bhh", 145, VEL, VEL)
         self.sendCommandRaw(cmd)
         time.sleep(TIME)
         cmd = struct.pack(">Bhh", 145, 0, 0)
@@ -490,11 +490,13 @@ class Main():
                 app.doGo2(keys[1])
             elif (keys[0] == 'TURN'):
                 app.doTurn(keys[1])
+                #r = Thread(target=app.doTurn, args=[key[1]])
+                #r.start()
             elif (keys[0] == 'NAV'):
-                #app.doNav2(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
-                p = Thread(target=app.doNav2, args=[float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5])])
-                p.start()
-            elif (keys[0] == 'S'):
+                app.doNav2(float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5]))
+                #p = Thread(target=app.doNav2, args=[float(keys[1]), float(keys[2]), float(keys[3]), float(keys[4]), float(keys[5])])
+                #p.start()
+            elif (keys[0] == 'STOP'):
                 q = Thread(target=app.doSTOP)
                 q.start()
                 q.join()
