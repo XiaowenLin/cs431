@@ -15,3 +15,12 @@ class Robot:
         self.app.sendKey('S')
         remain = self.app.doNav2(0, origin[0], origin[1], destination[0], destination[1])    
         return json.dumps({'status': 200, 'error': remain})
+
+    def forward (self):
+        self.app.doUP()
+
+    def turn (self, angle):
+        self.app.doTurn(angle)
+
+    def stop (self):
+        self.app.doSTOP()
