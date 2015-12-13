@@ -9,6 +9,7 @@ __copyright__ = "Copyright 2015 Ronald Joseph Wright"
 __maintainer__ = "Ron Wright"
 
 import struct
+from math import isinf
 
 def send_msg(sock, msg):
     """
@@ -51,6 +52,8 @@ def float_to_bytes(value):
     Converts the given float value into bytes consisting of a 32-byte integer
     and a 32-bit fraction (both in network byte, or big endian, order).
     """
+    if isinf(value):
+        return 'INF' # Return 'INF' if value is infinity
     integer_part = int(value)
     fractional_part = int((value - integer_part) * 4294967296.0)
     return struct.pack('>I', integer_part) + struct.pack('>I', fractional_part)
@@ -65,4 +68,6 @@ def bytes_to_float(the_bytes):
         integer_part = struct.unpack('>I', the_bytes[:4])[0]
         fractional_part = struct.unpack('>I', the_bytes[4:])[0]
         return integer_part + (fractional_part / 4294967296.0)
+    if the_bytes == 'INF':
+        return float('inf')
     return None
