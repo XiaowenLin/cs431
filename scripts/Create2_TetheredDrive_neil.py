@@ -260,8 +260,8 @@ class TetheredDriveApp():
             #if cnt == 3:
             #    watchdog = TIMEOUT
         cmd = struct.pack(">Bhh", 145, 0, 0)
-        self.sendCommandRaw(cmd)    
-
+        self.sendCommandRaw(cmd)
+        return 0
 
     def doSenseLoop(self):
         while(1):
