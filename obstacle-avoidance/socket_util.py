@@ -10,6 +10,14 @@ __maintainer__ = "Ron Wright"
 
 import struct
 from math import isinf
+from base64 import b64encode, b64decode
+
+def send_msg_as_base_64(sock, msg):
+    """
+    Encodes the message into base-64 and sends the encoded message using the
+    socket sock.
+    """
+    sock.sendall(b64encode(msg) + '\0')
 
 def send_msg(sock, msg):
     """
@@ -18,6 +26,20 @@ def send_msg(sock, msg):
     """
     msg = struct.pack('>I', len(msg)) + msg
     sock.sendall(msg)
+
+def recv_msg_as_base_64(sock, msg):
+    """
+    Receives a message encoded in base-64, decodes it, and returns the result.
+    """
+    data = ''
+    while True:
+        byte = sock.recv(1)
+        if not byte:
+            break
+        if byte == '\0':
+            return b64decode(data)
+        data += byte
+    return None
 
 def recv_msg(sock):
     """

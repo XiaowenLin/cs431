@@ -54,7 +54,7 @@ class PushServer(object):
             old_seq_number = self.seq_number
             self.cv.release()
             try:
-                socket_util.send_msg(conn, message_to_push)
+                socket_util.send_msg_as_base64(conn, message_to_push)
             except socket.error:
                 conn_closed = True
 
