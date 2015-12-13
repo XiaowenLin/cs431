@@ -16,10 +16,14 @@ class Robot:
         return json.dumps({'status': 200, 'error': remain})
 
     def forward(self):
+        self.app.sendKey('P')
+        self.app.sendKey('S')
         self.app.doUP()
         return json.dumps({'status': 200})
 
     def turn(self, angle):
+        self.app.sendKey('P')
+        self.app.sendKey('S')
         ret = self.app.doTurn(angle)
         if ret == 0:
             return json.dumps({'status': 200})
@@ -27,5 +31,7 @@ class Robot:
             return json.dumps({'status': 400})
 
     def stop(self):
+        self.app.sendKey('P')
+        self.app.sendKey('S')
         self.app.doSTOP()
         return json.dumps({'status': 200})
