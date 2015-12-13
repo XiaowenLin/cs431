@@ -107,5 +107,5 @@ if __name__ == '__main__':
     while True:
         logging.debug('listening')
         conn, addr = server.s.accept()
-        t = threading.Thread(target=server.handle_request, data=(conn, addr))
+        t = threading.Thread(target=server.handle_request, args=(conn, addr))
         t.start()
