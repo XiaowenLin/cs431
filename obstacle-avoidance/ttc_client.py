@@ -27,11 +27,11 @@ class TTCClient:
         In the case of an error, None is returned.
         """
         message = socket_util.recv_msg(self.s)
-        if message is not None or len(message) == 8*3:
+        if message is not None or len(message) == 9*3:
             # return (min_ttc, left_ttc, right_ttc)
-            return socket_util.bytes_to_float(message[:8]), \
-                   socket_util.bytes_to_float(message[8:16]), \
-                   socket_util.bytes_to_float(message[16:])
+            return socket_util.bytes_to_float(message[:9]), \
+                   socket_util.bytes_to_float(message[9:18]), \
+                   socket_util.bytes_to_float(message[18:])
         return None
 
     def shutdown(self):
