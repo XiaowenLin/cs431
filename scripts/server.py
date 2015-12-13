@@ -97,7 +97,9 @@ class Server:
         :param data:
         :return:
         """
+        Server.roomba_lock.acquire()
         return self.roomba.stop()
+        Server.roomba_lock.release()
 
     def _forward_robot(self, data):
         return self.roomba.forward()
