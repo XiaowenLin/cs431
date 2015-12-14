@@ -83,6 +83,7 @@ class TetheredDriveApp():
     def __init__(self):
         self.connection = None
         self.stop = False
+        self.facing = 90
         self.motions = {'UP': Command('UP', -VELOCITYCHANGE), 'DW': Command('DOWN', VELOCITYCHANGE), 'RT': Command('RIGHT', -ROTATIONCHANGE), 'LT': Command('LEFT', ROTATIONCHANGE)}
         self.commands = {'P': Command('PASSIVE', '128'), 'S': Command('SAFE', '131'), 'F': Command('FULL', '132'), 'C': Command('CLEAN', '135'), 'D': Command('DOCK', '143'), 'R': Command('RESET', '7'), 'B': Command('BEEP', '140 3 1 64 16 141 3')}
         self.assists = {'PTS': Command('PORTS', lambda: self.getSerialPorts()), 'Q': Command('QUIT', lambda: self.doQuit()), 'H': Command('HELP', lambda: self.getHelp()), 'CT': Command('CONNECT', lambda: self.doConnect())}
@@ -270,6 +271,7 @@ class TetheredDriveApp():
             #    watchdog = TIMEOUT
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)
+        self.facing += angle
         return 0
 
     def doSenseLoop(self):
@@ -302,7 +304,8 @@ class TetheredDriveApp():
          else:
              angle = 0
              
-         angle -= direction
+         #angle -= direction
+         angle -= self.facing
          
          if (angle > 180):
              angle = 360 -angle

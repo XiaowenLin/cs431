@@ -117,6 +117,7 @@ if __name__ == '__main__':
     t.start()
     while True:
         logging.debug('listening')
+        logging.info('Roomba currently facing: %f degree', server.roomba.app.facing)
         conn, addr = server.s.accept()
         server.roomba.stop()
         t.join()
