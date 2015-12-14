@@ -8,6 +8,19 @@ body {
 	height: 100%;
 }
 
+ol {
+    width: 100%;
+}
+
+ol li {
+    float: left;
+    margin-left: 500px;
+}
+
+#orig, #dest, #ttc {
+  margin-right: 20px;
+}
+
 h2 {
     font-family: "RalewayDots";
     margin: 0;
@@ -45,7 +58,6 @@ nav {
 
 nav > ul {
     height: 100%;
-    line-height: 80px;
     float: left;
     margin-bottom: 0;
 }
@@ -58,14 +70,18 @@ nav > ul > li {
     cursor: pointer;
 }
 
+#toggles {
+    padding: 30px;
+}
+
 /* Toggle button styling */
 
 .toggle {
-	margin-right: 20px;
+    margin-right: 20px;
 }
 
 .toggle > input[type="checkbox"] {
-	margin-right: 10px;
+    margin-right: 10px;
 }
 
 #main {
@@ -74,29 +90,25 @@ nav > ul > li {
     height: calc(100% - 250px);
 }
 
-/* Chart toggle styling */
-
-#lineChart {
-    width: 95%;
-    margin: 0 auto;
+#stream {
+    width: 50%;
+    height: 100%;
+    float: right;
+    margin-right: 50px;
 }
 
-#speedGauge,
-#accelerationGauge,
-#powerGauge {
-	width: 31%;
-	margin-left: 1.7%;
-    float: left;
+#imageDisplay {
+  margin-top: 1.5%;
+  height: 95%;
+  margin-left: 14%;
+}
+
+#angle {
+    width: 50%;
 }
 
 .hidden {
     visibility: hidden;
-}
-
-#switch {
-    line-height: 88px;
-    float: right;
-    margin-right: 2%;
 }
 
 /* Loading bar styling */
@@ -115,56 +127,24 @@ footer {
     opacity: 0.8;
 }
 
-/* Control (fast, slow) styling */
+/* Control styling */
 
 footer > #controls {
-    width: 39%;
-    text-align:center;
-    display: inline-block;
-    line-height: 115px;
+    text-align: center;
+    line-height: 50px;
 }
 
 footer > #controls > i {
-    margin-right: 55px;
+    margin-right: 130px;
 }
 
 footer > #controls > i:hover {
     cursor: pointer;
+    color: silver;
 }
 
-footer > #count {
-    width: 30%;
-    text-align: center;
-    display: inline-block;
-    font-family: "RalewayDots";
-    font-size: 30px;
-    color: white;
-}
 
-/* Slider resolution styling */
-
-footer > #slider {
-    width: 30%;
-    display: inline-block;
-    text-align: center;
-    line-height: 115px;
-    font-weight: bold;
-    vertical-align: middle;
-    margin-top: -10px;
-}
-
-#slider > #resolution {
-    display: inline-block;
-}
-
-#slider > p {
-    color: white;
-    padding-left: 5px;
-    padding-right: 5px;
-    display: inline-block;
-}
-
-#play {
+#move {
     color: lightgrey;
 }
 
@@ -172,35 +152,6 @@ footer,
 .push {
 	height: 100px;
 }
-
-
-/* Range input styling */
-
-input[type="range"] {
-    background: black;
-    height: 6px;
-    width: 80%;
-    max-width: 400px;
-    outline: none;
-    border-style: none;
-    border-radius: 8px;
-    margin: 0 auto;
-    box-shadow: inset 0 0 1px 1px rgba(0, 0, 0, 0.9), 0 1px 1px 0 rgba(255, 255, 255, 0.13);
-}
-
-input[type="range"]:hover {
-    cursor: pointer;
-}
-
-input[type="range"]::-webkit-slider-thumb {
-    -webkit-appearance: none !important;
-    height: 19px;
-	width: 19px;
-    border-radius: 100px;
-    border: 1px solid #56a856;
-    background: #56a856;
- }
-
 
 @font-face {
   font-family: "RalewayDots";
@@ -211,95 +162,368 @@ input[type="range"]::-webkit-slider-thumb {
 /* Checkbox input styling */
 
 input[type=checkbox] {
-	-webkit-appearance: none;
-	height: 14px;
-	width: 14px;
- 	cursor: pointer;
- 	border-radius: 20px;
- 	background-color: white;
+    -webkit-appearance: none;
+    height: 14px;
+    width: 14px;
+    cursor: pointer;
+    border-radius: 20px;
+    background-color: white;
 }
 
-#sc:checked {
-	background-color: #ff7f50;
-}
-
-#ac:checked {
-    background-color: #87cefa;
-}
-
-#oc:checked {
-    background-color: #56a856;
-}
-
-#pc:checked {
-    background-color: #da70d6;
+#auto:checked {
+    background-color: #ff7f50;
 }
 
 input[type=checkbox]:focus {
-	outline-color: transparent;
-	outline-style: none;
-}
-
-.odometer {
-    font-size: 25px;
-    margin-top: 18px;
-    margin-right: 20px;
-    width: 144px;
-    height: 45px;
-    text-align: center;
-    border-radius: 5px;
-    border: 5px solid black;
-    display: inline-block;
-    float: right;
-}
-
-/* File input styling */
-
-input[type=file] {
-    line-height: initial;
-}
-
-input[type=file]::-webkit-file-upload-button {
-	height: 25px;
-	width: 140px;
- 	cursor: pointer;
- 	border: none;
- 	background-color: white;
+    outline-color: transparent;
+    outline-style: none;
 }
 
 
 /*----------------------------
-    Color Bars
+    Degree Toggle
 -----------------------------*/
 
-
-#bars{
-    height: 212px;
-    margin: 0 auto;
-    position: relative;
-    width: 228px;
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700);
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-#control{
-    width:90px;
-    height:90px;
-    position:absolute;
-    top:50%;
-    left:50%;
-    margin:-45px 0 0 -45px;
+:before, :after {
+  content: '';
+  display: block;
+  position: absolute;
+  box-sizing: border-box;
 }
 
-.colorBar{
-    width:20px;
-    height:8px;
-    position:absolute;
-    opacity:0;
-    -moz-transition:0.3s;
-    -webkit-transition:0.3s;
-    -o-transition:0.3s;
-    transition:0.3s;
+html, body {
+  height: 100%;
+  overflow: hidden;
 }
 
-.colorBar.active{
-    opacity:1;
+body {
+  font: 14px/1 'Open Sans', sans-serif;
+  color: #555;
+  background: #ddd;
+}
+
+/* SWITCH
+--------------------------------------------- */
+.container {
+  position: fixed;
+  top: 52%;
+  left: 22%;
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+  font-weight: 700;
+  color: #eee;
+  transform: translateZ(0);
+}
+
+.de .den, .de .dene, .de .denem, .de .deneme, .de .dot {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+}
+
+.den {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  margin: -110px 0 0 -110px;
+  border-radius: 50%;
+  background: #555;
+}
+
+.dene {
+  z-index: 4;
+  width: 140px;
+  height: 140px;
+  margin: -70px 0 0 -70px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.denem {
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 50%;
+  background: #bbb;
+}
+
+.deneme {
+  width: 100px;
+  height: 100px;
+  margin: -50px 0 0 -50px;
+  border-radius: 100%;
+  background: #eee;
+}
+
+.den .switch {
+  z-index: 3;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.den .switch label {
+  z-index: 2;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 50%;
+  height: 70px;
+  margin-top: -35px;
+  transform-origin: 0% 50%;
+}
+
+.den .switch label:after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 1px;
+  width: 100%;
+  height: 30px;
+  transform: rotate(-30deg);
+}
+
+.den .switch label:before {
+  content: "";
+  position: absolute;
+  bottom: 6px;
+  left: 1px;
+  width: 100%;
+  height: 30px;
+  transform: rotate(30deg);
+}
+
+.den .switch label span {
+  z-index: 2;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 40px;
+  height: 100%;
+  font-size: 15px;
+  line-height: 70px;
+  text-align: center;
+  text-shadow: 0 1px 0 #444;
+}
+
+.den .switch label:nth-child(1) {
+  transform: rotate(-110deg);
+}
+
+.den .switch label:nth-child(1) span {
+  right: 2px;
+  font-size: 13px;
+  transform: rotate(90deg);
+}
+
+.den .switch label:nth-child(2) {
+  transform: rotate(-65deg);
+}
+
+.den .switch label:nth-child(2) span {
+  transform: rotate(90deg);
+}
+
+.den .switch label:nth-child(3) {
+  transform: rotate(-20deg);
+}
+
+.den .switch label:nth-child(3) span {
+  transform: rotate(100deg);
+}
+
+.den .switch label:nth-child(4) {
+  transform: rotate(23deg);
+}
+
+.den .switch label:nth-child(4) span {
+  transform: rotate(90deg);
+}
+
+.den .switch label:nth-child(5) {
+  transform: rotate(67deg);
+}
+
+.den .switch label:nth-child(5) span {
+  transform: rotate(90deg);
+}
+
+.den .switch label:nth-child(6) {
+  transform: rotate(110deg);
+}
+
+.den .switch label:nth-child(6) span {
+  transform: rotate(90deg);
+}
+
+.den .switch label:nth-child(7) {
+  transform: rotate(155deg);
+}
+
+.den .switch label:nth-child(7) span {
+  transform: rotate(90deg);
+}
+
+.den .switch label:nth-child(8) {
+  transform: rotate(205deg);
+}
+
+.den .switch label:nth-child(8) span {
+  transform: rotate(90deg);
+}
+
+.den .switch input {
+  position: absolute;
+  opacity: 0;
+  visibility: hidden;
+}
+
+.den .light span {
+  opacity: .4;
+  position: absolute;
+  top: 0;
+  left: 15px;
+  width: 100px;
+  height: 100px;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.8) 0%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0) 100%);
+}
+
+.den .dot {
+  z-index: 6;
+  width: 50%;
+  height: 12px;
+  margin-top: -6px;
+  transform-origin: 0% 50%;
+  transition: all .5s;
+}
+
+.den .dot span {
+  position: absolute;
+  top: 0;
+  left: 30px;
+  width: 12px;
+  height: 12px;
+  border-radius: 100%;
+  background: #555;
+}
+
+/* SWITCH DOT POSITION */
+.den #switch_0:checked ~ .dot {
+  transform: rotate(-110deg);
+}
+
+.den #switch_0:checked ~ .dot span {
+  transform: rotate(-110deg);
+}
+
+.den #switch_1:checked ~ .dot {
+  transform: rotate(-65deg);
+}
+
+.den #switch_1:checked ~ .dot span {
+  transform: rotate(-65deg);
+}
+
+.den #switch_2:checked ~ .dot {
+  transform: rotate(-20deg);
+}
+
+.den #switch_2:checked ~ .dot span {
+  transform: rotate(-20deg);
+}
+
+.den #switch_3:checked ~ .dot {
+  transform: rotate(23deg);
+}
+
+.den #switch_3:checked ~ .dot span {
+  transform: rotate(23deg);
+}
+
+.den #switch_4:checked ~ .dot {
+  transform: rotate(67deg);
+}
+
+.den #switch_4:checked ~ .dot span {
+  transform: rotate(67deg);
+}
+
+.den #switch_5:checked ~ .dot {
+  transform: rotate(110deg);
+}
+
+.den #switch_5:checked ~ .dot span {
+  transform: rotate(110deg);
+}
+
+.den #switch_6:checked ~ .dot {
+  transform: rotate(155deg);
+}
+
+.den #switch_6:checked ~ .dot span {
+  transform: rotate(155deg);
+}
+
+.den #switch_7:checked ~ .dot {
+  transform: rotate(205deg);
+}
+
+.den #switch_7:checked ~ .dot span {
+  transform: rotate(205deg);
+}
+
+/* LINE */
+.den hr.line {
+  z-index: 1;
+  position: absolute;
+  top: 50%;
+  width: 100%;
+  height: 0;
+  margin-top: -1px;
+  border-width: 1px 0;
+  border-style: solid;
+  border-top-color: #3c3d3f;
+  border-bottom-color: #666769;
+}
+
+.den hr.line:nth-child(1) {
+  transform: rotate(-45deg);
+}
+
+.den hr.line:nth-child(2) {
+  transform: rotate(45deg);
+}
+
+.den hr.line:nth-child(3) {
+  transform: rotate(90deg);
+}
+
+ul {
+  padding: 50px;
+  list-style: none;
+}
+
+ul li {
+  margin: 0 0 10px;
+}
+
+ul li:first-child {
+  font-weight: 700;
+}
+
+/* Codepen Preview Mode */
+@media only screen and (height: 300px) {
+  ul {
+    display: none;
+  }
 }

@@ -1,51 +1,237 @@
-$(function(){
+var net = require("net");
 
-    var colors = [
-        '26e000','2fe300','37e700','45ea00','51ef00',
-        '61f800','6bfb00','77ff02','80ff05','8cff09',
-        '93ff0b','9eff09','a9ff07','c2ff03','d7ff07',
-        'f2ff0a','fff30a','ffdc09','ffce0a','ffc30a',
-        'ffb509','ffa808','ff9908','ff8607','ff7005',
-        'ff5f04','ff4f03','f83a00','ee2b00','e52000'
-    ];
+var DASH = DASH || {};
 
-    var rad2deg = 180/Math.PI;
-    var deg = 0;
-    var bars = $('#bars');
+DASH.info = new Info();
 
-    for(var i=0;i<colors.length;i++){
+function Info() {
+    this.imageConnection;
+    this.ttcConnection;
+    this.commandConnection;
+    this.lastAngle = 0;
+    this.direction = 0;
+    this.moving = 0;
+    this.auto = 1;
+    this.x_dest = 0;
+    this.y_dest = 0;
+}
 
-        deg = i*12;
 
-        // Create the colorbars
+function sendCommand(commandString) {
+    DASH.info.commandConnection = net.connect({port: 12346, host: hostIp}, function() {
+        console.log('connected to command server');
+    });
+    DASH.info.commandConnection.on('data', function(data) {
+    });
+    DASH.info.commandConnection.on('end', function() {
+       console.log('disconnected from image server');
+    });
+    DASH.info.commandConnection.write(commandString);
+    DASH.info.commandConnection.pipe(DASH.info.commandConnection);
+    DASH.info.commandConnection.end();
+}
 
-        $('<div class="colorBar">').css({
-            backgroundColor: '#'+colors[i],
-            transform:'rotate('+deg+'deg)',
-            top: -Math.sin(deg/rad2deg)*80+100,
-            left: Math.cos((180 - deg)/rad2deg)*80+100,
-        }).appendTo(bars);
+
+function highlightDirection() {
+    var direction = DASH.info.direction;
+
+    if (DASH.info.direction === -1) {
+        $( "#forward" ).css("color", "#555");
+        $( "#back" ).css("color", "#56a856");
     }
 
-    var colorBars = bars.find('.colorBar');
-    var numBars = 0, lastNum = -1;
+    if (DASH.info.direction === 1) {
+        $( "#back" ).css("color", "#555");
+        $( "#forward" ).css("color", "#56a856");
+    }
 
-    $('#control').knobKnob({
-        snap : 10,
-        value: 154,
-        turn : function(ratio){
-            numBars = Math.round(colorBars.length*ratio);
+    if (DASH.info.direction === 0) {
+        $( "#back" ).css("color", "#555");
+        $( "#forward" ).css("color", "#555");
+    }
+}
 
-            // Update the dom only when the number of active bars
-            // changes, instead of on every move
 
-            if(numBars == lastNum){
-                return false;
-            }
-            lastNum = numBars;
+function updateOrigin(x, y) {
+    $('#orig').text("Origin ( x:" + x + ", y: " + y + ")");
+}
 
-            colorBars.removeClass('active').slice(0, numBars).addClass('active');
-        }
-    });
+function updateDestination(x, y) {
+    $('#dest').text("Destination ( x:" + x + ", y: " + y + ")");
+}
 
+function updateTtc(min, right, left) {
+    $('#ttc').text("TTC ( min: " + min + ", left: " + left + ", right: " + right + ")");
+}
+
+toggleAuto();
+
+
+function toggleAuto() {
+    if($('#auto').is(':checked')){
+        DASH.info.auto = 1;
+
+        $("#switch_0").prop('disabled', true);
+        $("#switch_1").prop('disabled', true);
+        $("#switch_2").prop('disabled', true);
+        $("#switch_3").prop('disabled', true);
+        $("#switch_4").prop('disabled', true);
+        $("#switch_5").prop('disabled', true);
+        $("#switch_6").prop('disabled', true);
+        $("#switch_7").prop('disabled', true);
+
+    } else {
+        DASH.info.auto = 0;
+
+        $("#switch_0").prop('disabled', false);
+        $("#switch_1").prop('disabled', false);
+        $("#switch_2").prop('disabled', false);
+        $("#switch_3").prop('disabled', false);
+        $("#switch_4").prop('disabled', false);
+        $("#switch_5").prop('disabled', false);
+        $("#switch_6").prop('disabled', false);
+        $("#switch_7").prop('disabled', false);
+    }
+}
+
+
+/******************* TOGGLE AUTO ***************/
+
+$('#auto').change(function(){
+    toggleAuto();
+});
+
+var timerForward;
+var timerBack;
+/******************* DIRECTION *****************/
+
+$('#forward').mousedown(function(){
+    if (!DASH.info.moving || DASH.info.auto) return;
+    DASH.info.direction = 1;
+    highlightDirection();
+    sendCommand('{"topic": "forward"}');
+});
+
+$('#forward').mouseup(function(){
+    if (!DASH.info.moving || DASH.info.auto) return;
+    DASH.info.direction = 0;
+    highlightDirection();
+    sendCommand('{"topic": "stop"}');
+});
+
+
+$('#back').mousedown(function(){
+    if (!DASH.info.moving || DASH.info.auto) return;
+    DASH.info.direction = -1;
+    highlightDirection();
+    sendCommand('{"topic": "backward"}');
+});
+
+$('#back').mouseup(function(){
+    if (!DASH.info.moving || DASH.info.auto) return;
+    DASH.info.direction = 0;
+    highlightDirection();
+    sendCommand('{"topic": "stop"}');
+});
+
+
+
+/******************* STOP/GO *******************/
+
+$('#move').click(function(){
+    if (!DASH.info.moving) {
+        $( "#move" ).attr( "class", "fa fa-pause fa-3x" );
+        DASH.info.moving = 1;
+    } else {
+        $( "#move" ).attr( "class", "fa fa-play fa-3x" );
+        DASH.info.moving = 0;
+        DASH.info.direction = 0;
+        sendCommand('{"topic": "stop"}');
+    }
+    highlightDirection();
+});
+
+
+
+
+/****************** ANGLE ***********************/
+
+$('#switch_0').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_0']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
+});
+
+$('#switch_1').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_1']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
+});
+
+$('#switch_2').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_2']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
+});
+
+$('#switch_3').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_3']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
+});
+
+$('#switch_4').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_4']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
+});
+
+$('#switch_5').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_5']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
+});
+
+$('#switch_6').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_6']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
+});
+
+$('#switch_7').change(function(){
+  if (!DASH.info.moving || DASH.info.auto) return;
+  if($(this).is(':checked')){
+    var angle = $("label[for='switch_7']").text();
+    var rotation = angle * -1;
+    DASH.info.lastAngle = angle;
+    sendCommand('{"topic": "angle", "turn": "' + rotation + '"}');
+  }
 });

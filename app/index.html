@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="assets/css/font-awesome.min.css">
     <!-- Main Style -->
     <link rel="stylesheet" href="assets/css/styles.css">
-    <link rel="stylesheet" href="assets/css/knobknob/knobknob.css" />
 </head>
 
 <body>
@@ -21,46 +20,79 @@
 	</header>
 
 	<nav>
-<!-- 		<ul id="toggles">
-            <li id="speed" class="toggle">
-                <input checked type="checkbox" id="sc" value="None"/>
-                <label for="sc">Speed</label>
+        <ul id="toggles">
+            <li id="auto-toggle" class="toggle">
+                <input checked type="checkbox" id="auto" value="None"/>
+                <label for="sc">Automatic</label>
             </li>
-            <li id="accel" class="toggle">
-                <input checked type="checkbox" id="ac" value="None"/>
-                <label for="ac">Acceleration</label>
-            </li>
-            <li id="power" class="toggle">
-                <input checked type="checkbox" id="pc" value="None"/>
-                <label for="pc">Power</label>
-            </li>
-            <li id="odometer" class="toggle">
-                <input checked type="checkbox" id="oc" value="None"/>
-                <label for="mc">Odometer</label>
-            </li>
-        </ul> -->
-        <ul id="menu">
-<!-- 			<li>
-                <input type="file" id="upload" value="None"/>
-            </li>
- -->        </ul>
 
-        <ul id="switch">
-<!--             <li>
-                <i class="fa fa-exchange fa-2x"></i>
+            <li>
+                <label id="orig" for="orig">Origin ( x: 0 , y: 0 )</label>
+            </li>
+
+            <li>
+                <label id="dest" for="dest">Destination ( x: 0, y: 0 )</label>
+            </li>
+
+            <li>
+                <label id="ttc" for="ttc">TTC ( min: 0, left: 0, right: 0 )</label>
+            </li>
+
+<!--             <li style="margin-left:50px">
+                <input type="text" class="input-sm" id="x_dest">
+                <input type="text" class="input-sm" id="y_dest">
+                <button id="go" type="button" class="btn btn-info btn-sm">GO</button>
             </li> -->
         </ul>
-
-        <!-- <div id="odometerGauge" class="odometer">0 km</div> -->
 	</nav>
 
     <section id="main">
-        <div id="bars">
-            <div id="control">
-                <!-- The knob markup will go here -->
+        <div id="angle">
+            <div class="row">
+                <div class="column-lg-4">
+                    <div class="container">
+                        <div class="de">
+                            <div class="den">
+                                <hr class="line">
+                                <hr class="line">
+                                <hr class="line">
+                                <hr class="line">
+                                <div class="switch">
+                                    <label for="switch_0"><span>-45</span></label>
+                                    <label for="switch_1"><span>45</span></label>
+                                    <label for="switch_2"><span>90</span></label>
+                                    <label for="switch_3"><span>135</span></label>
+                                    <label for="switch_4"><span>180</span></label>
+                                    <label for="switch_5"><span>-180</span></label>
+                                    <label for="switch_6"><span>-135</span></label>
+                                    <label for="switch_7"><span>-90</span></label>
+                                    <input id="switch_0" name="switch" checked type="radio">
+                                    <input id="switch_1" name="switch" type="radio">
+                                    <input id="switch_2" name="switch" type="radio">
+                                    <input id="switch_3" name="switch" type="radio">
+                                    <input id="switch_4" name="switch" type="radio">
+                                    <input id="switch_5" name="switch" type="radio">
+                                    <input id="switch_6" name="switch" type="radio">
+                                    <input id="switch_7" name="switch" type="radio">
+                                    <div class="dot"><span></span></div>
+                                    <div class="dene">
+                                        <div class="denem">
+                                            <div class="deneme">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
+    	</div>
+
+        <div id="stream">
+            <img id="imageDisplay" src="" />
         </div>
-	</section>
+    </section>
 
 	<div class="push"></div>
 </div>
@@ -68,16 +100,10 @@
 <div id="loader"></div>
 
 <footer>
-    <div id="slider">
-        <p>-</p><input id="resolution" type="range" value="0"/><p>+</p>
-    </div>
     <div id="controls">
-        <i id="slow" class="fa fa-arrow-left fa-3x"></i>
-        <i id="play" class="fa fa-play fa-3x"></i>
-        <i id="fast" class="fa fa-arrow-right fa-3x"></i>
-    </div>
-    <div id="count">
-        <h1>Speed: 1x</h1>
+        <i id="forward" class="fa fa-arrow-up fa-3x" style="margin-top:0px"></i>
+        <i id="move" class="fa fa-play fa-3x"></i>
+        <i id="back" style="margin-right:0px" class="fa fa-arrow-down fa-3x"></i>
     </div>
 </footer>
 
@@ -87,9 +113,10 @@
 <script src="assets/js/bootstrap.min.js"></script>
 <!-- Main JS -->
 <script src="assets/js/script.js"></script>
-
-<script src="assets/js/knobKnob/transform.js"></script>
-<script src="assets/js/knobknob/knobknob.jquery.js"></script>
+<!-- Client JS -->
+<script src="assets/js/client.js"></script>
+<!-- Server JS -->
+<script src="assets/js/server.js"></script>
 
 </body>
 </html>
