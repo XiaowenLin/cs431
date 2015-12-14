@@ -25,7 +25,7 @@ def send_msg_as_json(sock, msg):
     Encodes the message into JSON format and sends the encoded message using
     the socket sock.
     """
-    sock.sendall(dumps(msg))
+    sock.sendall(dumps(msg) + '\n')
 
 def send_msg(sock, msg):
     """
@@ -35,9 +35,10 @@ def send_msg(sock, msg):
     msg = struct.pack('>I', len(msg)) + msg
     sock.sendall(msg)
 
-def recv_msg_as_base64(sock):
+def recv_newline_terminated_msg(sock):
     """
-    Receives a message encoded in base-64, decodes it, and returns the result.
+    Receives a message terminated by a newline and returns the result (without
+    the newline included).
     """
     data = ''
     while True:
@@ -45,33 +46,21 @@ def recv_msg_as_base64(sock):
         if not byte:
             break
         if byte == '\n':
-            return b64decode(data)
+            return data
         data += byte
     return None
+
+def recv_msg_as_base64(sock):
+    """
+    Receives a message encoded in base-64, decodes it, and returns the result.
+    """
+    return b64decode(recv_newline_terminated_msg(sock))
 
 def recv_msg_as_json(sock):
     """
     Receives a message encoded in JSON, decodes it, and returns the result.
     """
-    data = ''
-    brace_count = 0
-    start = True
-    while start or brace_count != 0:
-        byte = sock.recv(1)
-        if not byte:
-            break
-        if byte == '{':
-            brace_count += 1
-        elif byte == '}':
-            brace_count -= 1
-        if start and brace_count != 0:
-            start = False
-        if not start:
-            data += byte
-    try:
-        return None if start else loads(data)
-    except ValueError:
-        return None
+    return loads(recv_newline_terminated_msg(sock))
 
 def recv_msg(sock):
     """
