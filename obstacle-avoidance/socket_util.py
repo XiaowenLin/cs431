@@ -69,7 +69,7 @@ def recv_msg_as_json(sock):
         if not start:
             data += byte
     try:
-        return None if not start else loads(data)
+        return None if start else loads(data)
     except ValueError:
         return None
 
