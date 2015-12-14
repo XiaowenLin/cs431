@@ -20,6 +20,12 @@ class Robot:
         self.app.sendKey('S')
         self.app.doUP()
         return json.dumps({'status': 200})
+    
+    def backward(self):
+        self.app.sendKey('P')
+        self.app.sendKey('S')
+        self.app.doDOWN()
+        return json.dumps({'status': 200})
 
     def turn(self, angle):
         self.app.sendKey('P')

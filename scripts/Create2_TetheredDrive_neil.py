@@ -223,9 +223,17 @@ class TetheredDriveApp():
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
     def doUP(self):
-        cmd = struct.pack(">Bhh", 145, VEL, VEL)
+        cmd = struct.pack(">Bhh", 145, VEL*3, VEL*3)
         self.sendCommandRaw(cmd)
-        time.sleep(TIME)
+        while(not self.stop):
+            time.sleep(TIME)
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+    def doDOWN(self):
+        cmd = struct.pack(">Bhh", 145, VEL*-3, VEL*-3)
+        self.sendCommandRaw(cmd)
+        while(not self.stop):
+            time.sleep(TIME)
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
     def doSTOP(self):
