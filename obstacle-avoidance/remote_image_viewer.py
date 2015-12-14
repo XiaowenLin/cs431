@@ -6,6 +6,9 @@ import threading
 import time
 import cv2
 
+def check_returned_value(value):
+    return float('inf') if value == 'Infinity' else value
+
 def frame_loop(host):
     global frame_cli
     frame_cli = FrameClient(host)
@@ -42,9 +45,11 @@ def ttc_loop(host):
         except (socket.error, TypeError):
             break
         if ttc_dict is not None:
-            print("\033[A\033[K\033[A\033[KMin TTC: %g"%(ttc_dict['min-ttc']))
+            print("\033[A\033[K\033[A\033[KMin TTC: %g"%( \
+                check_returned_value(ttc_dict['min-ttc'])))
             print("Left TTC: %g, Right TTC: %g"%( \
-                ttc_dict['left-ttc'], ttc_dict['right-ttc']))
+                check_returned_value(ttc_dict['left-ttc']), \
+                check_returned_value(ttc_dict['right-ttc'])))
 
     try:
         frame_cli.shutdown()

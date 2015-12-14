@@ -54,13 +54,19 @@ def recv_msg_as_base64(sock):
     """
     Receives a message encoded in base-64, decodes it, and returns the result.
     """
-    return b64decode(recv_newline_terminated_msg(sock))
+    try:
+        return b64decode(recv_newline_terminated_msg(sock))
+    except TypeError:
+        return None
 
 def recv_msg_as_json(sock):
     """
     Receives a message encoded in JSON, decodes it, and returns the result.
     """
-    return loads(recv_newline_terminated_msg(sock))
+    try:
+        return loads(recv_newline_terminated_msg(sock))
+    except (TypeError, ValueError):
+        return None
 
 def recv_msg(sock):
     """
