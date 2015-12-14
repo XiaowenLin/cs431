@@ -7,7 +7,6 @@ __copyright__ = "Copyright 2015 Ronald Joseph Wright"
 __maintainer__ = "Ron Wright"
 
 import socket, socket_util
-import json
 
 class TTCClient:
     """
