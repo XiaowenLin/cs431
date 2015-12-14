@@ -11,6 +11,7 @@ __maintainer__ = "Ron Wright"
 import struct
 from math import isinf
 from base64 import b64encode, b64decode
+from json import dumps, loads
 
 def send_msg_as_base64(sock, msg):
     """
@@ -18,6 +19,13 @@ def send_msg_as_base64(sock, msg):
     socket sock.
     """
     sock.sendall(b64encode(msg) + '\n')
+
+def send_msg_as_json(sock, msg):
+    """
+    Encodes the message into JSON format and sends the encoded message using
+    the socket sock.
+    """
+    sock.sendall(dumps(msg))
 
 def send_msg(sock, msg):
     """
@@ -40,6 +48,30 @@ def recv_msg_as_base64(sock):
             return b64decode(data)
         data += byte
     return None
+
+def recv_msg_as_json(sock):
+    """
+    Receives a message encoded in JSON, decodes it, and returns the result.
+    """
+    data = ''
+    brace_count = 0
+    start = True
+    while start or brace_count != 0:
+        byte = sock.recv(1)
+        if not byte:
+            break
+        if byte == '{':
+            brace_count += 1
+        elif byte == '}':
+            brace_count -= 1
+        if start and brace_count != 0:
+            start = False
+        if not start:
+            data += byte
+    try:
+        return None if not start else json.loads(data)
+    except ValueError:
+        return None
 
 def recv_msg(sock):
     """

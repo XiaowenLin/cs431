@@ -27,11 +27,7 @@ class TTCClient:
         Retrieves the TTC values from the server and returns them as a triple.
         In the case of an error, None is returned.
         """
-        message = socket_util.recv_msg_as_base64(self.s)
-        if message is not None:
-            # return (min_ttc, left_ttc, right_ttc)
-            return json.loads(message)
-        return None
+        return socket_util.recv_msg_as_json(self.s)
 
     def shutdown(self):
         """
