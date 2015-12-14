@@ -21,8 +21,16 @@ def frame_loop(host):
         if k == 27: # Was escape pressed?
             break
 
-    frame_cli.shutdown()
-    ttc_cli.shutdown()
+    try:
+        frame_cli.shutdown()
+    except socket.error:
+        pass
+
+    try:
+        ttc_cli.shutdown()
+    except socket.error:
+        pass
+
     sys.exit(0)
 
 def ttc_loop(host):
@@ -38,8 +46,16 @@ def ttc_loop(host):
             print("Left TTC: %g, Right TTC: %g"%( \
                 ttc_dict['left-ttc'], ttc_dict['right-ttc']))
 
-    frame_cli.shutdown()
-    ttc_cli.shutdown()
+    try:
+        frame_cli.shutdown()
+    except socket.error:
+        pass
+
+    try:
+        ttc_cli.shutdown()
+    except socket.error:
+        pass
+
     sys.exit(0)
 
 def main(argv):
