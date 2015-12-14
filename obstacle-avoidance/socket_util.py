@@ -10,6 +10,22 @@ __maintainer__ = "Ron Wright"
 
 import struct
 from math import isinf
+from base64 import b64encode, b64decode
+from json import dumps, loads
+
+def send_msg_as_base64(sock, msg):
+    """
+    Encodes the message into base-64 and sends the encoded message using the
+    socket sock.
+    """
+    sock.sendall(b64encode(msg) + '\n')
+
+def send_msg_as_json(sock, msg):
+    """
+    Encodes the message into JSON format and sends the encoded message using
+    the socket sock.
+    """
+    sock.sendall(dumps(msg) + '\n')
 
 def send_msg(sock, msg):
     """
@@ -18,6 +34,39 @@ def send_msg(sock, msg):
     """
     msg = struct.pack('>I', len(msg)) + msg
     sock.sendall(msg)
+
+def recv_newline_terminated_msg(sock):
+    """
+    Receives a message terminated by a newline and returns the result (without
+    the newline included).
+    """
+    data = ''
+    while True:
+        byte = sock.recv(1)
+        if not byte:
+            break
+        if byte == '\n':
+            return data
+        data += byte
+    return None
+
+def recv_msg_as_base64(sock):
+    """
+    Receives a message encoded in base-64, decodes it, and returns the result.
+    """
+    try:
+        return b64decode(recv_newline_terminated_msg(sock))
+    except TypeError:
+        return None
+
+def recv_msg_as_json(sock):
+    """
+    Receives a message encoded in JSON, decodes it, and returns the result.
+    """
+    try:
+        return loads(recv_newline_terminated_msg(sock))
+    except (TypeError, ValueError):
+        return None
 
 def recv_msg(sock):
     """

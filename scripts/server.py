@@ -12,6 +12,7 @@ json string to control:
 {'topic': 'angle', 'turn': 90.0}
 {'topic': 'stop'}
 {'topic': 'forward'}
+{'topic': 'backward'}
 """
 import json
 from __init__ import *
@@ -35,7 +36,8 @@ class Server:
         self.actions = {'coordinates': self._move_robot,                   # Add new actions here
                         'angle': self._turn_robot,
                         'stop': self._stop_robot,
-                        'forward': self._forward_robot}
+                        'forward': self._forward_robot,
+			'backward': self._backward_robot}
         self.roomba = Robot()
 
 
@@ -66,9 +68,9 @@ class Server:
             return
         logging.debug('received data: %s', data)
         data = json.loads(data)
-        Server.roomba_lock.acquire()
-        self.roomba.stop()
-        Server.roomba_lock.release()
+        #Server.roomba_lock.acquire()
+        #self.roomba.stop()
+        #Server.roomba_lock.release()
         status_s = self._execute(data)
         conn.send(status_s)  # echo
         conn.close()
@@ -97,15 +99,28 @@ class Server:
         :param data:
         :return:
         """
-        return self.roomba.stop()
+        return json.dumps({'status': 200})
 
     def _forward_robot(self, data):
         return self.roomba.forward()
 
+    def _backward_robot(self, data):
+        return self.roomba.backward()
+
+    def dummy(self):
+        return 0
+
+
 if __name__ == '__main__':
     server = Server()
+    t= threading.Thread(target=server.dummy)
+    t.start()
     while True:
         logging.debug('listening')
         conn, addr = server.s.accept()
+        server.roomba.stop()
+        t.join()
+        logging.debug('previous thread finished')
+        server.roomba.app.stop = False
         t = threading.Thread(target=server.handle_request, args=(conn, addr))
         t.start()

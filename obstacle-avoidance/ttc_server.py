@@ -9,6 +9,7 @@ __maintainer__ = "Ron Wright"
 
 from push_server import PushServer
 import socket_util
+from math import isinf
 
 class TTCServer(PushServer):
     """
@@ -22,14 +23,22 @@ class TTCServer(PushServer):
         maximum number of incoming client connections that can wait between
         successive accept calls.
         """
-        super(TTCServer, self).__init__(port, backlog)
+        super(TTCServer, self).__init__(port, backlog, True)
+
+    @staticmethod
+    def sanitize_number(number):
+        """
+        Helper function that converts any infinity value into the string
+        'Infinity'. This function should not be used outside of this class.
+        """
+        return 'Infinity' if isinf(number) else number
 
     def push_ttc_values(self, min_ttc, left_ttc, right_ttc):
         """
         Sets the frame to be sent to connected clients. Clients are notified
         only when the frame is valid.
         """
-        ttc_bytes = socket_util.float_to_bytes(min_ttc) + \
-                    socket_util.float_to_bytes(left_ttc) + \
-                    socket_util.float_to_bytes(right_ttc)
-        super(TTCServer, self).push_message(ttc_bytes)
+        super(TTCServer, self).push_message(\
+            {'min-ttc': TTCServer.sanitize_number(min_ttc), \
+             'left-ttc': TTCServer.sanitize_number(left_ttc), \
+             'right-ttc': TTCServer.sanitize_number(right_ttc)})

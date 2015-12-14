@@ -6,6 +6,9 @@ import threading
 import time
 import cv2
 
+def check_returned_value(value):
+    return float('inf') if value == 'Infinity' else value
+
 def frame_loop(host):
     global frame_cli
     frame_cli = FrameClient(host)
@@ -21,8 +24,16 @@ def frame_loop(host):
         if k == 27: # Was escape pressed?
             break
 
-    frame_cli.shutdown()
-    ttc_cli.shutdown()
+    try:
+        frame_cli.shutdown()
+    except socket.error:
+        pass
+
+    try:
+        ttc_cli.shutdown()
+    except socket.error:
+        pass
+
     sys.exit(0)
 
 def ttc_loop(host):
@@ -30,15 +41,26 @@ def ttc_loop(host):
     ttc_cli = TTCClient(host)
     while True:
         try:
-            min_ttc, left_ttc, right_ttc = ttc_cli.get_ttc_values()
+            ttc_dict = ttc_cli.get_ttc_values()
         except (socket.error, TypeError):
             break
-        if None not in (min_ttc, left_ttc, right_ttc):
-           print("\033[A\033[K\033[A\033[KMin TTC: %g"%(min_ttc))
-           print("Left TTC: %g, Right TTC: %g"%(left_ttc, right_ttc))
+        if ttc_dict is not None:
+            print("\033[A\033[K\033[A\033[KMin TTC: %g"%( \
+                check_returned_value(ttc_dict['min-ttc'])))
+            print("Left TTC: %g, Right TTC: %g"%( \
+                check_returned_value(ttc_dict['left-ttc']), \
+                check_returned_value(ttc_dict['right-ttc'])))
 
-    frame_cli.shutdown()
-    ttc_cli.shutdown()
+    try:
+        frame_cli.shutdown()
+    except socket.error:
+        pass
+
+    try:
+        ttc_cli.shutdown()
+    except socket.error:
+        pass
+
     sys.exit(0)
 
 def main(argv):

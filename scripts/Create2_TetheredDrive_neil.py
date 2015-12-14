@@ -57,7 +57,7 @@ VEL_H = 200
 VEL_TH = 200
 ROT = 30
 
-ITERMAX = 6
+ITERMAX = 3
 DETOUR = 50
 DETOURMAX = 50
 DANGLE = 90
@@ -223,9 +223,17 @@ class TetheredDriveApp():
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
     def doUP(self):
-        cmd = struct.pack(">Bhh", 145, VEL, VEL)
+        cmd = struct.pack(">Bhh", 145, VEL*3, VEL*3)
         self.sendCommandRaw(cmd)
-        time.sleep(TIME)
+        while(not self.stop):
+            time.sleep(TIME)
+        cmd = struct.pack(">Bhh", 145, 0, 0)
+        self.sendCommandRaw(cmd)    
+    def doDOWN(self):
+        cmd = struct.pack(">Bhh", 145, VEL*-3, VEL*-3)
+        self.sendCommandRaw(cmd)
+        while(not self.stop):
+            time.sleep(TIME)
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)    
     def doSTOP(self):
@@ -233,7 +241,7 @@ class TetheredDriveApp():
         time.sleep(TIME*5)
         cmd = struct.pack(">Bhh", 145, 0, 0)
         self.sendCommandRaw(cmd)
-        self.stop = False
+        #self.stop = False
         
     def doTurn(self, num):
         self.sendCommandASCII ('142 20') #sense angle
@@ -274,7 +282,7 @@ class TetheredDriveApp():
     def doNav2(self, direction, x, y, x_set, y_set):
          x_offset =100 * ( x_set - x)
          y_offset =100 * (y_set - y)
-         self.stop = False
+     
          if (x_offset <0 ):
              x_dir = -1
          else:
@@ -307,14 +315,15 @@ class TetheredDriveApp():
          
          remain =self.doGo2(distance)
          sum_angle =0
-         navdog = 0 
+         navdog = 0
+         
          while (remain >ERR and navdog < ITERMAX and not self.stop):
              navdog+= 1
              #print( 'Remaining distance', remain)
-             #if (self.senseWALL()):
-             #    print( "HIT A WALL")
-             #    self.doSOUND()
-             #    return remain
+             if (self.senseWALL()):
+                 print( "HIT A WALL")
+                 self.doSOUND()
+                 return remain
              wall = self.senseBUMP();
 
              if (wall):
