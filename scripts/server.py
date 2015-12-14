@@ -35,7 +35,8 @@ class Server:
         self.actions = {'coordinates': self._move_robot,                   # Add new actions here
                         'angle': self._turn_robot,
                         'stop': self._stop_robot,
-                        'forward': self._forward_robot}
+                        'forward': self._forward_robot,
+			'backward': self._backward_robot}
         self.roomba = Robot()
 
 
@@ -102,8 +103,13 @@ class Server:
     def _forward_robot(self, data):
         return self.roomba.forward()
 
+    def _backward_robot(self, data):
+        return self.roomba.backward()
+
     def dummy(self):
         return 0
+
+
 if __name__ == '__main__':
     server = Server()
     t= threading.Thread(target=server.dummy)
