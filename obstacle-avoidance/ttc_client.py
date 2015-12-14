@@ -7,6 +7,7 @@ __copyright__ = "Copyright 2015 Ronald Joseph Wright"
 __maintainer__ = "Ron Wright"
 
 import socket, socket_util
+import json
 
 class TTCClient:
     """
@@ -27,11 +28,9 @@ class TTCClient:
         In the case of an error, None is returned.
         """
         message = socket_util.recv_msg_as_base64(self.s)
-        if message is not None or len(message) == 9*3:
+        if message is not None:
             # return (min_ttc, left_ttc, right_ttc)
-            return socket_util.bytes_to_float(message[:9]), \
-                   socket_util.bytes_to_float(message[9:18]), \
-                   socket_util.bytes_to_float(message[18:])
+            return json.loads(message)
         return None
 
     def shutdown(self):
