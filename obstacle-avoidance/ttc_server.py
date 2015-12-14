@@ -9,7 +9,6 @@ __maintainer__ = "Ron Wright"
 
 from push_server import PushServer
 import socket_util
-import json
 
 class TTCServer(PushServer):
     """
@@ -23,14 +22,13 @@ class TTCServer(PushServer):
         maximum number of incoming client connections that can wait between
         successive accept calls.
         """
-        super(TTCServer, self).__init__(port, backlog)
+        super(TTCServer, self).__init__(port, backlog, True)
 
     def push_ttc_values(self, min_ttc, left_ttc, right_ttc):
         """
         Sets the frame to be sent to connected clients. Clients are notified
         only when the frame is valid.
         """
-        ttc_json_data = json.dumps({'min-ttc': min_ttc, \
-                                    'left-ttc': left_ttc, \
-                                    'right-ttc': right_ttc})
-        super(TTCServer, self).push_message(ttc_json_data)
+        super(TTCServer, self).push_message({'min-ttc': min_ttc, \
+                                             'left-ttc': left_ttc, \
+                                             'right-ttc': right_ttc})

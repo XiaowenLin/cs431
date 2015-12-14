@@ -15,13 +15,18 @@ class PushServer(object):
     """
     Class for sending messages to clients in real time
     """
-    def __init__(self, port, backlog=5):
+    def __init__(self, port, backlog=5, use_json=False):
         """
         Constructor for PushServer, where port is the port number to use for
         the push server, and the optional parameter backlog (with default
         value 5) is the maximum number of incoming client connections that can
         wait between successive accept calls.
         """
+        if use_json:
+            self.send_func = socket_util.send_msg_as_json
+        else:
+            self.send_func = socket_util.send_msg_as_base64
+
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind(('', port))
         self.s.listen(backlog)
@@ -54,7 +59,7 @@ class PushServer(object):
             old_seq_number = self.seq_number
             self.cv.release()
             try:
-                socket_util.send_msg_as_base64(conn, message_to_push)
+                self.send_func(conn, message_to_push)
             except socket.error:
                 conn_closed = True
 
