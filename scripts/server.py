@@ -12,6 +12,7 @@ json string to control:
 {'topic': 'angle', 'turn': 90.0}
 {'topic': 'stop'}
 {'topic': 'forward'}
+{'topic': 'backward'}
 """
 import json
 from __init__ import *
