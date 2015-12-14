@@ -33,9 +33,10 @@ def ttc_loop(host):
             ttc_dict = ttc_cli.get_ttc_values()
         except (socket.error, TypeError):
             break
-        print("\033[A\033[K\033[A\033[KMin TTC: %g"%(ttc_dict['min-ttc']))
-        print("Left TTC: %g, Right TTC: %g"%( \
-            ttc_dict['left-ttc'], ttc_dict['right-ttc']))
+        if ttc_dist is not None:
+            print("\033[A\033[K\033[A\033[KMin TTC: %g"%(ttc_dict['min-ttc']))
+            print("Left TTC: %g, Right TTC: %g"%( \
+                ttc_dict['left-ttc'], ttc_dict['right-ttc']))
 
     frame_cli.shutdown()
     ttc_cli.shutdown()
